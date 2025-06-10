@@ -1,0 +1,6 @@
+[default]
+profile = bryzek
+host = https://app.apibuilder.io
+
+[organization bryzek]
+generators = play_2_9_scala_3_controllers play_2_9_scala_3_client play_2_x_routes

@@ -1,0 +1,33 @@
+code:
+  bryzek:
+    waivers-api:
+      version: latest
+      generators:
+        - generator: play_2_9_scala_3_controllers
+          target: generated/app/apibuilder
+          attributes:
+            response: envelope
+        - generator: play_2_9_scala_3_client
+          target: generated/app/apibuilder
+        - generator: play_2_8_mock_client
+          target: generated/test/apibuilder
+        - generator: play_2_x_routes
+          target: conf/waivers-api.routes
+    waivers-admin:
+      version: latest
+      generators:
+        - generator: play_2_9_scala_3_controllers
+          target: generated/app/apibuilder
+          attributes:
+            response: envelope
+        - generator: play_2_9_scala_3_client
+          target: generated/app/apibuilder
+        - generator: play_2_8_mock_client
+          target: generated/test/apibuilder
+        - generator: play_2_x_routes
+          target: conf/waivers-admin.routes
+    waivers-error:
+      version: latest
+      generators:
+        play_2_9_scala_3_client: generated/app/apibuilder
+        play_2_8_mock_client: generated/test/apibuilder

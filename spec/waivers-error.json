@@ -1,0 +1,40 @@
+{
+  "name": "waivers-error",
+  "organization": {
+    "key": "bryzek"
+  },
+  "application": {
+    "key": "waivers-error"
+  },
+  "namespace": "io.bryzek.waivers.error.v0",
+  "version": "0.0.1",
+  "info": {
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "contact": {
+      "name": "Michael Bryzek",
+      "email": "mbryzek@alum.mit.edu",
+      "url": "https://github.com/mbryzek"
+    }
+  },
+  "description": "Error models for waivers application",
+  "models": {
+    "generic_error": {
+      "description": "A generic error message",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "description": "Machine readable error code"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "Human readable error message"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "name": "waivers-public",
+  "organization": {
+    "key": "bryzek"
+  },
+  "application": {
+    "key": "waivers-public"
+  },
+  "namespace": "io.bryzek.waivers.dao.public",
+  "version": "0.0.1",
+  "info": {
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "contact": {
+      "name": "Michael Bryzek",
+      "email": "mbryzek@alum.mit.edu",
+      "url": "https://github.com/mbryzek"
+    }
+  },
+  "description": "DAO for waivers database schema",
+  "models": {
+    "project": {
+      "description": "A waiver project (e.g., pickleball court, dragon boat race)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format prj-{uuid}",
+          "attributes": [
+            {
+              "name": "primary_key",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Display name of the project"
+        },
+        {
+          "name": "slug",
+          "type": "string",
+          "description": "URL-friendly unique identifier",
+          "attributes": [
+            {
+              "name": "unique_index",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Optional project description"
+        },
+        {
+          "name": "waiver_template",
+          "type": "string",
+          "description": "Template content for the waiver document"
+        },
+        {
+          "name": "signnow_template_id",
+          "type": "string",
+          "required": false,
+          "description": "SignNow template document ID"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "description": "Whether this project is accepting new waivers"
+        }
+      ]
+    },
+    "user": {
+      "description": "A participant who signs waivers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format usr-{uuid}",
+          "attributes": [
+            {
+              "name": "primary_key",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "description": "Email address",
+          "attributes": [
+            {
+              "name": "unique_index",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "description": "First name"
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "description": "Last name"
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "required": false,
+          "description": "Optional phone number"
+        }
+      ]
+    },
+    "waiver": {
+      "description": "A waiver template version for a project",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format wvr-{uuid}",
+          "attributes": [
+            {
+              "name": "primary_key",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "project_id",
+          "type": "string",
+          "description": "Reference to project",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "projects.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "description": "Version number for this waiver template"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "description": "Title of the waiver"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "description": "Full waiver text content"
+        },
+        {
+          "name": "is_current",
+          "type": "boolean",
+          "default": "true",
+          "description": "Whether this is the current version for the project"
+        }
+      ]
+    },
+    "signature": {
+      "description": "A signed waiver by a user",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format sig-{uuid}",
+          "attributes": [
+            {
+              "name": "primary_key",
+              "value": {}
+            }
+          ]
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "description": "Reference to user who signed",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "users.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "waiver_id",
+          "type": "string",
+          "description": "Reference to waiver that was signed",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "waivers.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "signnow_document_id",
+          "type": "string",
+          "required": false,
+          "description": "SignNow document ID for the signed document"
+        },
+        {
+          "name": "status",
+          "type": "signature_status",
+          "description": "Current status of the signature process"
+        },
+        {
+          "name": "signed_at",
+          "type": "date-time-iso8601",
+          "required": false,
+          "description": "When the waiver was signed (null if not yet signed)"
+        },
+        {
+          "name": "pdf_url",
+          "type": "string",
+          "required": false,
+          "description": "URL to download the signed PDF document"
+        },
+        {
+          "name": "ip_address",
+          "type": "string",
+          "required": false,
+          "description": "IP address of the signer"
+        }
+      ]
+    }
+  },
+  "enums": {
+    "signature_status": {
+      "description": "Status of a waiver signature",
+      "values": [
+        {
+          "name": "pending",
+          "description": "Signature has been initiated but not completed"
+        },
+        {
+          "name": "signed",
+          "description": "Waiver has been successfully signed"
+        },
+        {
+          "name": "expired",
+          "description": "Signature request has expired"
+        },
+        {
+          "name": "cancelled",
+          "description": "Signature request was cancelled"
+        }
+      ]
+    }
+  }
+}

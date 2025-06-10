@@ -1,0 +1,314 @@
+{
+  "name": "waivers-admin",
+  "organization": {
+    "key": "bryzek"
+  },
+  "application": {
+    "key": "waivers-admin"
+  },
+  "namespace": "io.bryzek.waivers.admin.v0",
+  "version": "0.0.1",
+  "info": {
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "contact": {
+      "name": "Michael Bryzek",
+      "email": "mbryzek@alum.mit.edu",
+      "url": "https://github.com/mbryzek"
+    }
+  },
+  "description": "Admin API for waivers application",
+  "imports": [
+    {
+      "uri": "https://app.apibuilder.io/bryzek/waivers-error/latest/service.json",
+      "namespace": "io.bryzek.waivers.error.v0",
+      "organization": {
+        "key": "bryzek"
+      },
+      "application": {
+        "key": "waivers-error"
+      },
+      "version": "0.0.1",
+      "enums": ["generic_error"],
+      "unions": ["generic_error"],
+      "models": ["generic_error"]
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/waivers-api/latest/service.json",
+      "namespace": "io.bryzek.waivers.api.v0",
+      "organization": {
+        "key": "bryzek"
+      },
+      "application": {
+        "key": "waivers-api"
+      },
+      "version": "0.0.1",
+      "models": ["project", "user", "waiver", "signature"],
+      "enums": ["signature_status"]
+    }
+  ],
+  "models": {
+    "project_form": {
+      "description": "Form for creating/updating projects",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Display name of the project"
+        },
+        {
+          "name": "slug",
+          "type": "string",
+          "description": "URL-friendly unique identifier"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Optional project description"
+        },
+        {
+          "name": "waiver_template",
+          "type": "string",
+          "description": "Template content for the waiver document"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "description": "Whether this project is accepting new waivers"
+        }
+      ]
+    },
+    "signature_summary": {
+      "description": "Summary information about signatures for admin view",
+      "fields": [
+        {
+          "name": "signature",
+          "type": "io.bryzek.waivers.api.v0.models.signature",
+          "description": "The signature details"
+        },
+        {
+          "name": "project",
+          "type": "io.bryzek.waivers.api.v0.models.project",
+          "description": "The project this signature belongs to"
+        }
+      ]
+    },
+    "export_request": {
+      "description": "Request to export signatures for a project",
+      "fields": [
+        {
+          "name": "project_id",
+          "type": "string",
+          "description": "Project to export signatures for"
+        },
+        {
+          "name": "status",
+          "type": "io.bryzek.waivers.api.v0.enums.signature_status",
+          "required": false,
+          "description": "Filter by signature status"
+        },
+        {
+          "name": "from_date",
+          "type": "date-time-iso8601",
+          "required": false,
+          "description": "Include signatures from this date"
+        },
+        {
+          "name": "to_date",
+          "type": "date-time-iso8601",
+          "required": false,
+          "description": "Include signatures until this date"
+        }
+      ]
+    }
+  },
+  "resources": {
+    "project": {
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/projects",
+          "description": "List all projects",
+          "parameters": [
+            {
+              "name": "limit",
+              "type": "long",
+              "location": "query",
+              "required": false,
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "location": "query",
+              "required": false,
+              "default": 0,
+              "minimum": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "[io.bryzek.waivers.api.v0.models.project]"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/projects",
+          "description": "Create a new project",
+          "body": {
+            "type": "project_form"
+          },
+          "responses": {
+            "201": {
+              "type": "io.bryzek.waivers.api.v0.models.project"
+            },
+            "400": {
+              "type": "[io.bryzek.waivers.error.v0.models.generic_error]"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/projects/:id",
+          "description": "Get project by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "string",
+              "location": "path",
+              "description": "Project ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "io.bryzek.waivers.api.v0.models.project"
+            },
+            "404": {
+              "type": "io.bryzek.waivers.error.v0.models.generic_error"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/projects/:id",
+          "description": "Update a project",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "string",
+              "location": "path",
+              "description": "Project ID"
+            }
+          ],
+          "body": {
+            "type": "project_form"
+          },
+          "responses": {
+            "200": {
+              "type": "io.bryzek.waivers.api.v0.models.project"
+            },
+            "400": {
+              "type": "[io.bryzek.waivers.error.v0.models.generic_error]"
+            },
+            "404": {
+              "type": "io.bryzek.waivers.error.v0.models.generic_error"
+            }
+          }
+        }
+      ]
+    },
+    "signature": {
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/signatures",
+          "description": "List signatures with filtering",
+          "parameters": [
+            {
+              "name": "project_id",
+              "type": "string",
+              "location": "query",
+              "required": false,
+              "description": "Filter by project"
+            },
+            {
+              "name": "status",
+              "type": "io.bryzek.waivers.api.v0.enums.signature_status",
+              "location": "query",
+              "required": false,
+              "description": "Filter by status"
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "location": "query",
+              "required": false,
+              "description": "Filter by user email"
+            },
+            {
+              "name": "limit",
+              "type": "long",
+              "location": "query",
+              "required": false,
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "location": "query",
+              "required": false,
+              "default": 0,
+              "minimum": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "[signature_summary]"
+            }
+          }
+        }
+      ]
+    },
+    "export": {
+      "operations": [
+        {
+          "method": "POST",
+          "path": "/exports",
+          "description": "Generate export file for signatures",
+          "body": {
+            "type": "export_request"
+          },
+          "responses": {
+            "200": {
+              "type": "unit",
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "type": "string",
+                  "description": "application/zip"
+                },
+                {
+                  "name": "Content-Disposition",
+                  "type": "string",
+                  "description": "attachment; filename=signatures.zip"
+                }
+              ]
+            },
+            "400": {
+              "type": "[io.bryzek.waivers.error.v0.models.generic_error]"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
