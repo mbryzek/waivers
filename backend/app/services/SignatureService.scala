@@ -13,8 +13,8 @@ import scala.annotation.unused
 class SignatureService @Inject()(
   signaturesDao: SignaturesDao,
   usersDao: UsersDao,
-  signatureTemplatesDao: SignatureTemplatesDao,
-  signatureRequestsDao: SignatureRequestsDao,
+  @unused signatureTemplatesDao: SignatureTemplatesDao,
+  @unused signatureRequestsDao: SignatureRequestsDao,
   waiverService: WaiverService,
   @unused helloSignService: HelloSignService
 )(implicit ec: ExecutionContext) {
@@ -62,6 +62,7 @@ class SignatureService @Inject()(
         val userForm = db.generated.UserForm(
           id = generatedUser.id,
           email = form.email,
+          lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
           phone = form.phone
@@ -74,6 +75,7 @@ class SignatureService @Inject()(
         val userForm = db.generated.UserForm(
           id = userId,
           email = form.email,
+          lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
           phone = form.phone

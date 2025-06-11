@@ -2,6 +2,8 @@ package models.internal
 
 import play.api.libs.json._
 import org.joda.time.DateTime
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JodaReads._
 
 // Internal models that correspond to API Builder generated models
 // but are used internally by the application
@@ -264,26 +266,12 @@ case class GenericError(
   message: String
 )
 
-// Merged object with constructor and JSON formatter
-
-object User {
-  implicit val format: Format[User] = Json.format[User]
-}
-
-object Waiver {
-  implicit val format: Format[Waiver] = Json.format[Waiver]
-}
-
 object SignatureTemplate {
   implicit val format: Format[SignatureTemplate] = Json.format[SignatureTemplate]
 }
 
 object SignatureRequest {
   implicit val format: Format[SignatureRequest] = Json.format[SignatureRequest]
-}
-
-object Signature {
-  implicit val format: Format[Signature] = Json.format[Signature]
 }
 
 object WaiverForm {
