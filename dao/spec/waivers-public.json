@@ -1,39 +1,132 @@
 {
   "name": "waivers-public",
-  "organization": {
-    "key": "bryzek"
-  },
-  "application": {
-    "key": "waivers-public"
-  },
-  "namespace": "io.bryzek.waivers.dao.public",
-  "version": "0.0.1",
-  "info": {
-    "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
+  "attributes": [
+    {
+      "name": "scala",
+      "value": {
+        "version": "3.6",
+        "package": "db.generated"
+      }
     },
-    "contact": {
-      "name": "Michael Bryzek",
-      "email": "mbryzek@alum.mit.edu",
-      "url": "https://github.com/mbryzek"
+    {
+      "name": "psql",
+      "value": {
+        "pkey": "id",
+        "hash_code": {},
+        "audit": {
+          "created": {
+            "at": { "type": "date-time-iso8601" }
+          },
+          "updated": {
+            "at": { "type": "date-time-iso8601" },
+            "by": { "name": "updated_by_user_id", "type": "string" }
+          }
+        }
+      }
     }
-  },
-  "description": "DAO for waivers database schema",
+  ],
   "models": {
+    "signature_template": {
+      "description": "Template definitions for signature providers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format tpl-{uuid}"
+        },
+        {
+          "name": "project_id",
+          "type": "string",
+          "description": "Reference to project",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "project.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "description": "Signature provider (hello_sign, docusign, etc.)"
+        },
+        {
+          "name": "provider_template_id",
+          "type": "string",
+          "description": "Template ID in the provider's system"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Human-readable template name"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "description": "Whether this template is active for use"
+        }
+      ]
+    },
+    "signature_request": {
+      "description": "Signature requests created with external providers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "description": "Unique identifier with format req-{uuid}"
+        },
+        {
+          "name": "signature_template_id",
+          "type": "string",
+          "description": "Reference to signature template used",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "signature_template.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "description": "Signature provider used for this request"
+        },
+        {
+          "name": "provider_request_id",
+          "type": "string",
+          "description": "Request ID in the provider's system"
+        },
+        {
+          "name": "signing_url",
+          "type": "string",
+          "required": false,
+          "description": "URL for signing the document"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "description": "Current status of the signature request"
+        },
+        {
+          "name": "metadata",
+          "type": "string",
+          "required": false,
+          "description": "JSON metadata from provider (webhooks, etc.)"
+        }
+      ]
+    },
     "project": {
       "description": "A waiver project (e.g., pickleball court, dragon boat race)",
       "fields": [
         {
           "name": "id",
           "type": "string",
-          "description": "Unique identifier with format prj-{uuid}",
-          "attributes": [
-            {
-              "name": "primary_key",
-              "value": {}
-            }
-          ]
+          "description": "Unique identifier with format prj-{uuid}"
         },
         {
           "name": "name",
@@ -63,12 +156,6 @@
           "description": "Template content for the waiver document"
         },
         {
-          "name": "hellosign_template_id",
-          "type": "string",
-          "required": false,
-          "description": "HelloSign template document ID"
-        },
-        {
           "name": "is_active",
           "type": "boolean",
           "default": "true",
@@ -82,13 +169,7 @@
         {
           "name": "id",
           "type": "string",
-          "description": "Unique identifier with format usr-{uuid}",
-          "attributes": [
-            {
-              "name": "primary_key",
-              "value": {}
-            }
-          ]
+          "description": "Unique identifier with format usr-{uuid}"
         },
         {
           "name": "email",
@@ -125,13 +206,7 @@
         {
           "name": "id",
           "type": "string",
-          "description": "Unique identifier with format wvr-{uuid}",
-          "attributes": [
-            {
-              "name": "primary_key",
-              "value": {}
-            }
-          ]
+          "description": "Unique identifier with format wvr-{uuid}"
         },
         {
           "name": "project_id",
@@ -141,7 +216,7 @@
             {
               "name": "foreign_key",
               "value": {
-                "references": "projects.id"
+                "references": "project.id"
               }
             }
           ]
@@ -175,13 +250,7 @@
         {
           "name": "id",
           "type": "string",
-          "description": "Unique identifier with format sig-{uuid}",
-          "attributes": [
-            {
-              "name": "primary_key",
-              "value": {}
-            }
-          ]
+          "description": "Unique identifier with format sig-{uuid}"
         },
         {
           "name": "user_id",
@@ -191,7 +260,7 @@
             {
               "name": "foreign_key",
               "value": {
-                "references": "users.id"
+                "references": "user.id"
               }
             }
           ]
@@ -204,20 +273,42 @@
             {
               "name": "foreign_key",
               "value": {
-                "references": "waivers.id"
+                "references": "waiver.id"
               }
             }
           ]
         },
         {
-          "name": "hellosign_signature_request_id",
+          "name": "signature_template_id",
           "type": "string",
           "required": false,
-          "description": "HelloSign signature request ID for the document"
+          "description": "Reference to signature template used",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "signature_template.id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "signature_request_id",
+          "type": "string",
+          "required": false,
+          "description": "Reference to signature request created",
+          "attributes": [
+            {
+              "name": "foreign_key",
+              "value": {
+                "references": "signature_request.id"
+              }
+            }
+          ]
         },
         {
           "name": "status",
-          "type": "signature_status",
+          "type": "string",
           "description": "Current status of the signature process"
         },
         {
@@ -237,29 +328,6 @@
           "type": "string",
           "required": false,
           "description": "IP address of the signer"
-        }
-      ]
-    }
-  },
-  "enums": {
-    "signature_status": {
-      "description": "Status of a waiver signature",
-      "values": [
-        {
-          "name": "pending",
-          "description": "Signature has been initiated but not completed"
-        },
-        {
-          "name": "signed",
-          "description": "Waiver has been successfully signed"
-        },
-        {
-          "name": "expired",
-          "description": "Signature request has expired"
-        },
-        {
-          "name": "cancelled",
-          "description": "Signature request was cancelled"
         }
       ]
     }

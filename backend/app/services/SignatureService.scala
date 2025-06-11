@@ -1,6 +1,6 @@
 package services
 
-import dao.{SignaturesDao, UsersDao}
+import db.generated.{SignaturesDao, UsersDao, SignatureTemplatesDao, SignatureRequestsDao}
 import models.internal._
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,6 +12,8 @@ import scala.annotation.unused
 class SignatureService @Inject()(
   signaturesDao: SignaturesDao,
   usersDao: UsersDao,
+  signatureTemplatesDao: SignatureTemplatesDao,
+  signatureRequestsDao: SignatureRequestsDao,
   waiverService: WaiverService,
   @unused helloSignService: HelloSignService
 )(implicit ec: ExecutionContext) {
@@ -84,7 +86,8 @@ class SignatureService @Inject()(
       id = s"sig-${UUID.randomUUID().toString.replace("-", "")}",
       userId = user.id,
       waiverId = waiver.id,
-      helloSignSignatureRequestId = None,
+      signatureTemplateId = None, // Will be set when signature template is selected
+      signatureRequestId = None, // Will be set when signature request is created
       status = SignatureStatus.Pending,
       signedAt = None,
       pdfUrl = None,

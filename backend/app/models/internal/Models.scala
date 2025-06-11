@@ -12,7 +12,6 @@ case class Project(
   slug: String,
   description: Option[String],
   waiverTemplate: String,
-  helloSignTemplateId: Option[String],
   isActive: Boolean,
   createdAt: Instant,
   updatedAt: Instant,
@@ -42,11 +41,37 @@ case class Waiver(
   updatedByUserId: String
 )
 
+case class SignatureTemplate(
+  id: String,
+  projectId: String,
+  provider: SignatureProvider,
+  providerTemplateId: String,
+  name: String,
+  isActive: Boolean,
+  createdAt: Instant,
+  updatedAt: Instant,
+  updatedByUserId: String
+)
+
+case class SignatureRequest(
+  id: String,
+  signatureTemplateId: String,
+  provider: SignatureProvider,
+  providerRequestId: String,
+  signingUrl: Option[String],
+  status: SignatureRequestStatus,
+  metadata: Option[String],
+  createdAt: Instant,
+  updatedAt: Instant,
+  updatedByUserId: String
+)
+
 case class Signature(
   id: String,
   userId: String,
   waiverId: String,
-  helloSignSignatureRequestId: Option[String],
+  signatureTemplateId: Option[String],
+  signatureRequestId: Option[String],
   status: SignatureStatus,
   signedAt: Option[Instant],
   pdfUrl: Option[String],
@@ -55,6 +80,72 @@ case class Signature(
   updatedAt: Instant,
   updatedByUserId: String
 )
+
+sealed trait SignatureProvider {
+  def name: String
+}
+
+object SignatureProvider {
+  case object HelloSign extends SignatureProvider { val name = "hello_sign" }
+  case object DocuSign extends SignatureProvider { val name = "docusign" }
+  case object AdobeSign extends SignatureProvider { val name = "adobe_sign" }
+
+  def fromString(str: String): Option[SignatureProvider] = str.toLowerCase match {
+    case "hello_sign" => Some(HelloSign)
+    case "docusign" => Some(DocuSign)
+    case "adobe_sign" => Some(AdobeSign)
+    case _ => None
+  }
+
+  implicit val format: Format[SignatureProvider] = Format[SignatureProvider](
+    Reads { json =>
+      json.validate[String].flatMap { str =>
+        fromString(str) match {
+          case Some(provider) => JsSuccess(provider)
+          case None => JsError(s"Invalid signature provider: $str")
+        }
+      }
+    },
+    Writes(provider => JsString(provider.name))
+  )
+}
+
+sealed trait SignatureRequestStatus {
+  def name: String
+}
+
+object SignatureRequestStatus {
+  case object Created extends SignatureRequestStatus { val name = "created" }
+  case object Sent extends SignatureRequestStatus { val name = "sent" }
+  case object Viewed extends SignatureRequestStatus { val name = "viewed" }
+  case object Completed extends SignatureRequestStatus { val name = "completed" }
+  case object Cancelled extends SignatureRequestStatus { val name = "cancelled" }
+  case object Declined extends SignatureRequestStatus { val name = "declined" }
+  case object Error extends SignatureRequestStatus { val name = "error" }
+
+  def fromString(str: String): Option[SignatureRequestStatus] = str.toLowerCase match {
+    case "created" => Some(Created)
+    case "sent" => Some(Sent)
+    case "viewed" => Some(Viewed)
+    case "completed" => Some(Completed)
+    case "cancelled" => Some(Cancelled)
+    case "declined" => Some(Declined)
+    case "error" => Some(Error)
+    case _ => None
+  }
+
+  implicit val format: Format[SignatureRequestStatus] = Format[SignatureRequestStatus](
+    Reads { json =>
+      json.validate[String].flatMap { str =>
+        fromString(str) match {
+          case Some(status) => JsSuccess(status)
+          case None => JsError(s"Invalid signature request status: $str")
+        }
+      }
+    },
+    Writes(status => JsString(status.name))
+  )
+}
 
 sealed trait SignatureStatus {
   def name: String
@@ -110,6 +201,14 @@ object User {
 
 object Waiver {
   implicit val format: Format[Waiver] = Json.format[Waiver]
+}
+
+object SignatureTemplate {
+  implicit val format: Format[SignatureTemplate] = Json.format[SignatureTemplate]
+}
+
+object SignatureRequest {
+  implicit val format: Format[SignatureRequest] = Json.format[SignatureRequest]
 }
 
 object Signature {
