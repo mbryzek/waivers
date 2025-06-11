@@ -5,6 +5,7 @@ set search_path to public;
 create table users(
   id                  text primary key check(util.non_empty_trimmed_string(id)),
   email               text not null check(util.non_empty_trimmed_string(email)),
+  lower_email         text not null check(util.non_empty_trimmed_string(lower_email)),
   first_name          text not null check(util.non_empty_trimmed_string(first_name)),
   last_name           text not null check(util.non_empty_trimmed_string(last_name)),
   phone               text check(util.null_or_non_empty_trimmed_string(phone)),

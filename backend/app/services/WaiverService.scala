@@ -1,21 +1,23 @@
 package services
 
-import dao.WaiversDao
+import db.generated.{WaiversDao, Waiver => GeneratedWaiver}
 import models.internal.Waiver
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.annotation.unused
+import org.joda.time.DateTime
 
 @Singleton
 class WaiverService @Inject()(
   waiversDao: WaiversDao
-)(implicit @unused ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) {
 
-  def findCurrentByProjectId(projectId: String): Future[Option[Waiver]] = {
-    waiversDao.findCurrentByProjectId(projectId)
+  private def toInternal(generated: GeneratedWaiver): Waiver = Waiver(generated)
+
+  def findCurrentByProjectId(projectId: String): Future[Option[Waiver]] = Future {
+    waiversDao.findAll(projectId = Some(projectId), isCurrent = Some(true), limit = Some(1)).headOption.map(toInternal)
   }
 
-  def findById(id: String): Future[Option[Waiver]] = {
-    waiversDao.findById(id)
+  def findById(id: String): Future[Option[Waiver]] = Future {
+    waiversDao.findById(id).map(toInternal)
   }
 }

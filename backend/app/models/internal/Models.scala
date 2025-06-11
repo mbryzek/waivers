@@ -1,7 +1,7 @@
 package models.internal
 
 import play.api.libs.json._
-import java.time.Instant
+import org.joda.time.DateTime
 
 // Internal models that correspond to API Builder generated models
 // but are used internally by the application
@@ -13,10 +13,28 @@ case class Project(
   description: Option[String],
   waiverTemplate: String,
   isActive: Boolean,
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
+
+object Project {
+  def apply(generated: db.generated.Project): Project = {
+    Project(
+      id = generated.id,
+      name = generated.name,
+      slug = generated.slug,
+      description = generated.description,
+      waiverTemplate = generated.waiverTemplate,
+      isActive = generated.isActive,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+  
+  implicit val format: Format[Project] = Json.format[Project]
+}
 
 case class User(
   id: String,
@@ -24,10 +42,27 @@ case class User(
   firstName: String,
   lastName: String,
   phone: Option[String],
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
+
+object User {
+  def apply(generated: db.generated.User): User = {
+    User(
+      id = generated.id,
+      email = generated.email,
+      firstName = generated.firstName,
+      lastName = generated.lastName,
+      phone = generated.phone,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+  
+  implicit val format: Format[User] = Json.format[User]
+}
 
 case class Waiver(
   id: String,
@@ -36,10 +71,28 @@ case class Waiver(
   title: String,
   content: String,
   isCurrent: Boolean,
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
+
+object Waiver {
+  def apply(generated: db.generated.Waiver): Waiver = {
+    Waiver(
+      id = generated.id,
+      projectId = generated.projectId,
+      version = generated.version,
+      title = generated.title,
+      content = generated.content,
+      isCurrent = generated.isCurrent,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+  
+  implicit val format: Format[Waiver] = Json.format[Waiver]
+}
 
 case class SignatureTemplate(
   id: String,
@@ -48,8 +101,8 @@ case class SignatureTemplate(
   providerTemplateId: String,
   name: String,
   isActive: Boolean,
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
 
@@ -61,8 +114,8 @@ case class SignatureRequest(
   signingUrl: Option[String],
   status: SignatureRequestStatus,
   metadata: Option[String],
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
 
@@ -73,13 +126,34 @@ case class Signature(
   signatureTemplateId: Option[String],
   signatureRequestId: Option[String],
   status: SignatureStatus,
-  signedAt: Option[Instant],
+  signedAt: Option[DateTime],
   pdfUrl: Option[String],
   ipAddress: Option[String],
-  createdAt: Instant,
-  updatedAt: Instant,
+  createdAt: DateTime,
+  updatedAt: DateTime,
   updatedByUserId: String
 )
+
+object Signature {
+  def apply(generated: db.generated.Signature): Signature = {
+    Signature(
+      id = generated.id,
+      userId = generated.userId,
+      waiverId = generated.waiverId,
+      signatureTemplateId = generated.signatureTemplateId,
+      signatureRequestId = generated.signatureRequestId,
+      status = SignatureStatus.fromString(generated.status).getOrElse(SignatureStatus.Pending),
+      signedAt = generated.signedAt,
+      pdfUrl = generated.pdfUrl,
+      ipAddress = generated.ipAddress,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+  
+  implicit val format: Format[Signature] = Json.format[Signature]
+}
 
 sealed trait SignatureProvider {
   def name: String
@@ -190,10 +264,7 @@ case class GenericError(
   message: String
 )
 
-// JSON formatters
-object Project {
-  implicit val format: Format[Project] = Json.format[Project]
-}
+// Merged object with constructor and JSON formatter
 
 object User {
   implicit val format: Format[User] = Json.format[User]

@@ -1,6 +1,7 @@
 package services
 
-import db.generated.{ProjectsDao, Project, ProjectForm}
+import db.generated.{ProjectsDao, Project => GeneratedProject, ProjectForm => GeneratedProjectForm}
+import models.internal.Project
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
@@ -11,21 +12,24 @@ class ProjectService @Inject()(
   projectsDao: ProjectsDao
 )(implicit ec: ExecutionContext) {
 
+  // Conversion methods between internal and generated models
+  private def toInternal(generated: GeneratedProject): Project = Project(generated)
+
   def findBySlug(slug: String): Future[Option[Project]] = Future {
-    projectsDao.findAll(limit = Some(1))(query => query.equals("projects.slug", Some(slug))).headOption
+    projectsDao.findAll(limit = Some(1))(query => query.equals("projects.slug", Some(slug))).headOption.map(toInternal)
   }
 
   def findById(id: String): Future[Option[Project]] = Future {
-    projectsDao.findById(id)
+    projectsDao.findById(id).map(toInternal)
   }
 
   def findAll(limit: Long = 50, offset: Long = 0): Future[Seq[Project]] = Future {
-    projectsDao.findAll(limit = Some(limit), offset = offset)
+    projectsDao.findAll(limit = Some(limit), offset = offset).map(toInternal)
   }
 
   def create(name: String, slug: String, description: Option[String], waiverTemplate: String, isActive: Boolean = true): Future[Project] = Future {
     val projectId = s"prj-${UUID.randomUUID().toString.replace("-", "")}"
-    val form = ProjectForm(
+    val form = GeneratedProjectForm(
       id = projectId,
       name = name,
       slug = slug,
@@ -37,7 +41,7 @@ class ProjectService @Inject()(
     projectsDao.insert("system", form) // TODO: Get proper user context
     
     // Return the created project
-    projectsDao.findById(projectId).getOrElse(
+    projectsDao.findById(projectId).map(toInternal).getOrElse(
       throw new RuntimeException(s"Failed to create project with id $projectId")
     )
   }
@@ -45,7 +49,7 @@ class ProjectService @Inject()(
   def update(id: String, name: String, slug: String, description: Option[String], waiverTemplate: String, isActive: Boolean): Future[Option[Project]] = {
     findById(id).map { maybeProject =>
       maybeProject.map { existingProject =>
-        val form = ProjectForm(
+        val form = GeneratedProjectForm(
           id = id,
           name = name,
           slug = slug,
@@ -57,7 +61,7 @@ class ProjectService @Inject()(
         projectsDao.updateById("system", id, form) // TODO: Get proper user context
         
         // Return the updated project
-        projectsDao.findById(id).getOrElse(existingProject)
+        projectsDao.findById(id).map(toInternal).getOrElse(existingProject)
       }
     }
   }

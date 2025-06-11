@@ -174,7 +174,12 @@
         {
           "name": "email",
           "type": "string",
-          "description": "Email address",
+          "description": "Email address"
+        },
+        {
+          "name": "lower_email",
+          "type": "string",
+          "description": "Lowercase email for case-insensitive lookups",
           "attributes": [
             {
               "name": "unique_index",
