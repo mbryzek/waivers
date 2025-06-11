@@ -32,7 +32,7 @@ class ProjectService @Inject()(
       slug = form.slug,
       description = form.description,
       waiverTemplate = form.waiverTemplate,
-      signNowTemplateId = None,
+      helloSignTemplateId = None,
       isActive = form.isActive,
       createdAt = Instant.now(),
       updatedAt = Instant.now(),

@@ -16,8 +16,8 @@ PUT     /admin/projects/:id             controllers.AdminController.updateProjec
 GET     /admin/signatures               controllers.AdminController.getSignatures(project_id: Option[String], status: Option[String], email: Option[String], limit: Option[Long], offset: Option[Long])
 POST    /admin/exports                  controllers.AdminController.exportSignatures()
 
-# SignNow webhooks
-POST    /webhooks/signnow               controllers.WebhookController.signNowWebhook()
+# HelloSign webhooks
+POST    /webhooks/hellosign             controllers.WebhookController.helloSignWebhook()
 
 # Health check
 GET     /healthcheck                    controllers.HealthcheckController.index()

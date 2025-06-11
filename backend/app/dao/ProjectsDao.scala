@@ -17,13 +17,13 @@ class ProjectsDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     get[String]("slug") ~
     get[Option[String]]("description") ~
     get[String]("waiver_template") ~
-    get[Option[String]]("signnow_template_id") ~
+    get[Option[String]]("hellosign_template_id") ~
     get[Boolean]("is_active") ~
     get[Instant]("created_at") ~
     get[Instant]("updated_at") ~
     get[String]("updated_by_user_id") map {
-      case id ~ name ~ slug ~ description ~ waiverTemplate ~ signNowTemplateId ~ isActive ~ createdAt ~ updatedAt ~ updatedByUserId =>
-        Project(id, name, slug, description, waiverTemplate, signNowTemplateId, isActive, createdAt, updatedAt, updatedByUserId)
+      case id ~ name ~ slug ~ description ~ waiverTemplate ~ helloSignTemplateId ~ isActive ~ createdAt ~ updatedAt ~ updatedByUserId =>
+        Project(id, name, slug, description, waiverTemplate, helloSignTemplateId, isActive, createdAt, updatedAt, updatedByUserId)
     }
   }
 
@@ -52,11 +52,11 @@ class ProjectsDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     db.withConnection { implicit connection =>
       SQL"""
         INSERT INTO projects (
-          id, name, slug, description, waiver_template, signnow_template_id, is_active,
+          id, name, slug, description, waiver_template, hellosign_template_id, is_active,
           created_at, updated_at, updated_by_user_id
         ) VALUES (
           ${project.id}, ${project.name}, ${project.slug}, ${project.description}, 
-          ${project.waiverTemplate}, ${project.signNowTemplateId}, ${project.isActive},
+          ${project.waiverTemplate}, ${project.helloSignTemplateId}, ${project.isActive},
           ${project.createdAt}, ${project.updatedAt}, ${project.updatedByUserId}
         )
       """.executeUpdate()
@@ -71,7 +71,7 @@ class ProjectsDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
           slug = ${project.slug},
           description = ${project.description},
           waiver_template = ${project.waiverTemplate},
-          signnow_template_id = ${project.signNowTemplateId},
+          hellosign_template_id = ${project.helloSignTemplateId},
           is_active = ${project.isActive},
           updated_at = ${project.updatedAt},
           updated_by_user_id = ${project.updatedByUserId}

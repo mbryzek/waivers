@@ -4,11 +4,12 @@ import dao.WaiversDao
 import models.internal.Waiver
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.annotation.unused
 
 @Singleton
 class WaiverService @Inject()(
   waiversDao: WaiversDao
-)(implicit ec: ExecutionContext) {
+)(implicit @unused ec: ExecutionContext) {
 
   def findCurrentByProjectId(projectId: String): Future[Option[Waiver]] = {
     waiversDao.findCurrentByProjectId(projectId)

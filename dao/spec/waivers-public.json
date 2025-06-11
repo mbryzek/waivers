@@ -63,10 +63,10 @@
           "description": "Template content for the waiver document"
         },
         {
-          "name": "signnow_template_id",
+          "name": "hellosign_template_id",
           "type": "string",
           "required": false,
-          "description": "SignNow template document ID"
+          "description": "HelloSign template document ID"
         },
         {
           "name": "is_active",
@@ -210,10 +210,10 @@
           ]
         },
         {
-          "name": "signnow_document_id",
+          "name": "hellosign_signature_request_id",
           "type": "string",
           "required": false,
-          "description": "SignNow document ID for the signed document"
+          "description": "HelloSign signature request ID for the document"
         },
         {
           "name": "status",

@@ -113,13 +113,13 @@ class AdminController @Inject()(
 
   private def validateNonEmpty(field: String, value: String): ValidatedNec[String, String] = {
     if (value.trim.nonEmpty) value.valid
-    else s"$field cannot be empty".invalid
+    else s"$field cannot be empty".invalidNec
   }
 
   private def validateSlug(field: String, value: String): ValidatedNec[String, String] = {
     val slugRegex = """^[a-z0-9-]+$""".r
     if (slugRegex.matches(value)) value.valid
-    else s"$field must contain only lowercase letters, numbers, and hyphens".invalid
+    else s"$field must contain only lowercase letters, numbers, and hyphens".invalidNec
   }
 }
 

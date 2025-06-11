@@ -85,13 +85,13 @@ class WaiversController @Inject()(
 
   private def validateNonEmpty(field: String, value: String): ValidatedNec[String, String] = {
     if (value.trim.nonEmpty) value.valid
-    else s"$field cannot be empty".invalid
+    else s"$field cannot be empty".invalidNec
   }
 
   private def validateEmail(field: String, value: String): ValidatedNec[String, String] = {
     val emailRegex = """^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$""".r
     if (emailRegex.matches(value)) value.valid
-    else s"$field must be a valid email address".invalid
+    else s"$field must be a valid email address".invalidNec
   }
 
   private def validatePhone(field: String, value: Option[String]): ValidatedNec[String, Option[String]] = {
@@ -100,7 +100,7 @@ class WaiversController @Inject()(
       case Some(phone) =>
         val phoneRegex = """^[\+]?[\d\s\-\(\)]{10,}$""".r
         if (phoneRegex.matches(phone)) Some(phone).valid
-        else s"$field must be a valid phone number".invalid
+        else s"$field must be a valid phone number".invalidNec
     }
   }
 }

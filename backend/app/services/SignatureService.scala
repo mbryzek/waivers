@@ -6,13 +6,14 @@ import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
 import java.time.Instant
+import scala.annotation.unused
 
 @Singleton
 class SignatureService @Inject()(
   signaturesDao: SignaturesDao,
   usersDao: UsersDao,
   waiverService: WaiverService,
-  signNowService: SignNowService
+  @unused helloSignService: HelloSignService
 )(implicit ec: ExecutionContext) {
 
   def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[Signature] = {
@@ -28,8 +29,8 @@ class SignatureService @Inject()(
       // Create signature record
       signature <- createSignatureRecord(user, waiver, ipAddress)
       
-      // Initiate SignNow process (placeholder for now)
-      _ <- Future.successful(()) // TODO: Integrate with SignNow
+      // Initiate HelloSign process (placeholder for now)
+      _ <- Future.successful(()) // TODO: Integrate with HelloSign
       
     } yield signature
   }
@@ -83,7 +84,7 @@ class SignatureService @Inject()(
       id = s"sig-${UUID.randomUUID().toString.replace("-", "")}",
       userId = user.id,
       waiverId = waiver.id,
-      signNowDocumentId = None,
+      helloSignSignatureRequestId = None,
       status = SignatureStatus.Pending,
       signedAt = None,
       pdfUrl = None,

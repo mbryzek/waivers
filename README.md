@@ -4,12 +4,12 @@ A modern, secure digital waiver signing system built with Scala Play Framework a
 
 ## Overview
 
-The Waivers application allows organizations to create digital waiver projects and collect legally binding signatures from participants. It supports multiple projects, SignNow integration for digital signatures, and provides admin tools for managing and exporting signed waivers.
+The Waivers application allows organizations to create digital waiver projects and collect legally binding signatures from participants. It supports multiple projects, HelloSign integration for digital signatures, and provides admin tools for managing and exporting signed waivers.
 
 ## Features
 
 - **Multi-Project Support**: Create and manage multiple waiver projects
-- **Digital Signatures**: Integration with SignNow for legally binding signatures
+- **Digital Signatures**: Integration with HelloSign for legally binding signatures
 - **Mobile-Friendly**: Responsive design optimized for all devices
 - **Admin Dashboard**: View, search, and export signed waivers
 - **Email Notifications**: Automatic delivery of signed documents
@@ -21,7 +21,7 @@ The Waivers application allows organizations to create digital waiver projects a
 - **API-First Design**: REST APIs defined with API Builder specifications
 - **Database**: PostgreSQL with Schema Evolution Manager for migrations
 - **Authentication**: Placeholder for future authentication system
-- **Digital Signatures**: SignNow API integration
+- **Digital Signatures**: HelloSign API integration
 - **Email**: Play Mailer for sending signed documents
 
 ### Frontend (Elm + Tailwind CSS)
@@ -99,11 +99,9 @@ DB_URL=jdbc:postgresql://localhost/waivers_development
 DB_USER=postgres
 DB_PASSWORD=
 
-# SignNow Integration
-SIGNNOW_CLIENT_ID=your_client_id
-SIGNNOW_CLIENT_SECRET=your_client_secret
-SIGNNOW_USERNAME=your_username
-SIGNNOW_PASSWORD=your_password
+# HelloSign Integration
+HELLOSIGN_API_KEY=your_api_key
+HELLOSIGN_CLIENT_ID=your_client_id
 
 # Email
 SMTP_HOST=smtp.example.com
@@ -132,7 +130,7 @@ APP_BASE_URL=http://localhost:9000
 - `POST /admin/exports` - Export signatures
 
 ### Webhooks
-- `POST /webhooks/signnow` - SignNow webhook handler
+- `POST /webhooks/hellosign` - HelloSign webhook handler
 
 ## Usage
 
@@ -145,7 +143,7 @@ APP_BASE_URL=http://localhost:9000
 1. Participant visits `/waiver/{project-slug}`
 2. Fills out their information (name, email, optional phone)
 3. Reviews waiver content and clicks "Sign Waiver"
-4. Redirected to SignNow for digital signature
+4. Redirected to HelloSign for digital signature
 5. Receives confirmation and email copy after signing
 
 ### Admin Management
@@ -159,7 +157,7 @@ APP_BASE_URL=http://localhost:9000
 - All form inputs are validated on both client and server
 - Database queries use parameterized statements to prevent SQL injection
 - HTTPS enforcement in production
-- SignNow provides legally binding digital signatures
+- HelloSign provides legally binding digital signatures
 - Audit trails for all database changes
 
 ## Deployment

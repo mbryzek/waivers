@@ -15,7 +15,7 @@ class SignaturesDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     get[String]("id") ~
     get[String]("user_id") ~
     get[String]("waiver_id") ~
-    get[Option[String]]("signnow_document_id") ~
+    get[Option[String]]("hellosign_signature_request_id") ~
     get[String]("status") ~
     get[Option[Instant]]("signed_at") ~
     get[Option[String]]("pdf_url") ~
@@ -23,9 +23,9 @@ class SignaturesDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     get[Instant]("created_at") ~
     get[Instant]("updated_at") ~
     get[String]("updated_by_user_id") map {
-      case id ~ userId ~ waiverId ~ signNowDocumentId ~ statusStr ~ signedAt ~ pdfUrl ~ ipAddress ~ createdAt ~ updatedAt ~ updatedByUserId =>
+      case id ~ userId ~ waiverId ~ helloSignSignatureRequestId ~ statusStr ~ signedAt ~ pdfUrl ~ ipAddress ~ createdAt ~ updatedAt ~ updatedByUserId =>
         val status = SignatureStatus.fromString(statusStr).getOrElse(SignatureStatus.Pending)
-        Signature(id, userId, waiverId, signNowDocumentId, status, signedAt, pdfUrl, ipAddress, createdAt, updatedAt, updatedByUserId)
+        Signature(id, userId, waiverId, helloSignSignatureRequestId, status, signedAt, pdfUrl, ipAddress, createdAt, updatedAt, updatedByUserId)
     }
   }
 
@@ -52,10 +52,10 @@ class SignaturesDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     db.withConnection { implicit connection =>
       SQL"""
         INSERT INTO signatures (
-          id, user_id, waiver_id, signnow_document_id, status, signed_at, pdf_url, ip_address,
+          id, user_id, waiver_id, hellosign_signature_request_id, status, signed_at, pdf_url, ip_address,
           created_at, updated_at, updated_by_user_id
         ) VALUES (
-          ${signature.id}, ${signature.userId}, ${signature.waiverId}, ${signature.signNowDocumentId}, 
+          ${signature.id}, ${signature.userId}, ${signature.waiverId}, ${signature.helloSignSignatureRequestId}, 
           ${signature.status.name}, ${signature.signedAt}, ${signature.pdfUrl}, ${signature.ipAddress},
           ${signature.createdAt}, ${signature.updatedAt}, ${signature.updatedByUserId}
         )
@@ -67,7 +67,7 @@ class SignaturesDao @Inject()(db: Database)(implicit ec: ExecutionContext) {
     db.withConnection { implicit connection =>
       SQL"""
         UPDATE signatures SET
-          signnow_document_id = ${signature.signNowDocumentId},
+          hellosign_signature_request_id = ${signature.helloSignSignatureRequestId},
           status = ${signature.status.name},
           signed_at = ${signature.signedAt},
           pdf_url = ${signature.pdfUrl},
