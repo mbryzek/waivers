@@ -92,6 +92,7 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.client3" %% "async-http-client-backend-future" % "3.9.8"
     ),
     scalacOptions ++= allScalacOptions,
+    Test / scalacOptions ~= { opts => opts.filterNot(_ == "-Xfatal-warnings") },
     Test / javaOptions ++= Seq(
       "--add-exports=java.base/sun.security.x509=ALL-UNNAMED",
       "--add-opens=java.base/sun.security.ssl=ALL-UNNAMED"
