@@ -9,19 +9,24 @@ import play.api.test._
 class WaiversControllerSpec extends DefaultServerSpec 
   with MockApiClient 
   with DatabaseHelpers {
+  
+  import java.util.UUID
+  
+  def uniqueSlug(): String = s"test-${UUID.randomUUID().toString.take(8)}"
 
   "getProject" must {
     "return 200 with project data when project exists" in {
-      val project = createProject(name = "Test Project", slug = "test-project")
+      val project = createProject(name = "Test Project", slug = uniqueSlug())
       
       val request = FakeRequest(GET, s"/projects/${project.slug}")
       val response = route(app, request).get
       
       status(response) mustBe OK
       val json = contentAsJson(response)
+      (json \ "id").as[String] must startWith("prj-")
       (json \ "id").as[String] mustBe project.id
       (json \ "name").as[String] mustBe "Test Project"
-      (json \ "slug").as[String] mustBe "test-project"
+      (json \ "slug").as[String] mustBe project.slug
     }
 
     "return 404 when project not found" in {
@@ -37,7 +42,7 @@ class WaiversControllerSpec extends DefaultServerSpec
 
   "getCurrentWaiver" must {
     "return 200 with waiver data when current waiver exists" in {
-      val project = createProject(slug = "test-project")
+      val project = createProject(slug = uniqueSlug())
       val waiver = createWaiver(project.id, title = "Test Waiver", content = "Test content", isCurrent = true)
       
       val request = FakeRequest(GET, s"/projects/${project.slug}/waiver")
@@ -45,6 +50,7 @@ class WaiversControllerSpec extends DefaultServerSpec
       
       status(response) mustBe OK
       val json = contentAsJson(response)
+      (json \ "id").as[String] must startWith("wvr-")
       (json \ "id").as[String] mustBe waiver.id
       (json \ "title").as[String] mustBe "Test Waiver"
       (json \ "content").as[String] mustBe "Test content"
@@ -61,7 +67,7 @@ class WaiversControllerSpec extends DefaultServerSpec
     }
 
     "return 404 when no current waiver exists" in {
-      val project = createProject(slug = "test-project")
+      val project = createProject(slug = uniqueSlug())
       // Create waiver but mark as not current
       createWaiver(project.id, isCurrent = false)
       
@@ -76,14 +82,14 @@ class WaiversControllerSpec extends DefaultServerSpec
 
   "createSignature" must {
     "return 201 with signature data when valid form submitted" in {
-      val project = createProject(slug = "test-project")
+      val project = createProject(slug = uniqueSlug())
       val waiver = createWaiver(project.id, isCurrent = true)
       
       val formData = Json.obj(
         "firstName" -> "John",
         "lastName" -> "Doe", 
         "email" -> "john.doe@example.com",
-        "phone" -> "555-1234"
+        "phone" -> "555-123-4567"
       )
       
       val request = FakeRequest(POST, s"/projects/${project.slug}/signatures")
@@ -95,12 +101,14 @@ class WaiversControllerSpec extends DefaultServerSpec
       status(response) mustBe CREATED
       val json = contentAsJson(response)
       (json \ "userId").asOpt[String] must be(defined)
+      (json \ "userId").as[String] must startWith("usr-")
+      (json \ "waiverId").as[String] must startWith("wvr-")
       (json \ "waiverId").as[String] mustBe waiver.id
       (json \ "status").as[String] mustBe "pending"
     }
 
     "return 400 when form validation fails" in {
-      val project = createProject(slug = "test-project")
+      val project = createProject(slug = uniqueSlug())
       createWaiver(project.id, isCurrent = true)
       
       val invalidFormData = Json.obj(
@@ -140,7 +148,7 @@ class WaiversControllerSpec extends DefaultServerSpec
     }
 
     "return 500 when no current waiver exists" in {
-      val project = createProject(slug = "test-project")
+      val project = createProject(slug = uniqueSlug())
       // Don't create any waiver
       
       val formData = Json.obj(
@@ -173,8 +181,11 @@ class WaiversControllerSpec extends DefaultServerSpec
       
       status(response) mustBe OK
       val json = contentAsJson(response)
+      (json \ "id").as[String] must startWith("sig-")
       (json \ "id").as[String] mustBe signature.id
+      (json \ "userId").as[String] must startWith("usr-")
       (json \ "userId").as[String] mustBe user.id
+      (json \ "waiverId").as[String] must startWith("wvr-")
       (json \ "waiverId").as[String] mustBe waiver.id
       (json \ "status").as[String] mustBe "pending"
     }
