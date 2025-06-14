@@ -20,13 +20,17 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
         phone = Some("555-1234")
       )
       
-      val signature = await(service.createSignature(project, form, "127.0.0.1"))
+      val (signature, user, createdWaiver) = await(service.createSignature(project, form, "127.0.0.1"))
       
-      signature.status mustBe SignatureStatus.Pending
-      signature.ipAddress mustBe Some("127.0.0.1")
-      signature.waiverId mustBe waiver.id
-      signature.signedAt mustBe None
-      signature.pdfUrl mustBe None
+      signature.status.mustBe(SignatureStatus.Pending)
+      signature.ipAddress.mustBe(Some("127.0.0.1"))
+      signature.waiverId.mustBe(waiver.id)
+      signature.signedAt.mustBe(None)
+      signature.pdfUrl.mustBe(None)
+      user.email.mustBe(form.email)
+      user.firstName.mustBe(form.firstName)
+      user.lastName.mustBe(form.lastName)
+      createdWaiver.id.mustBe(waiver.id)
     }
 
     "create a new signature with existing user" in {
@@ -44,12 +48,14 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
         phone = Some("555-5678")
       )
       
-      val signature = await(service.createSignature(project, form, "192.168.1.1"))
+      val (signature, user, createdWaiver) = await(service.createSignature(project, form, "192.168.1.1"))
       
-      signature.status mustBe SignatureStatus.Pending
-      signature.ipAddress mustBe Some("192.168.1.1")
-      signature.waiverId mustBe waiver.id
-      signature.userId mustBe existingUser.id
+      signature.status.mustBe(SignatureStatus.Pending)
+      signature.ipAddress.mustBe(Some("192.168.1.1"))
+      signature.waiverId.mustBe(waiver.id)
+      signature.userId.mustBe(existingUser.id)
+      user.id.mustBe(existingUser.id)
+      createdWaiver.id.mustBe(waiver.id)
     }
 
     "fail when no current waiver exists for project" in {
@@ -79,15 +85,15 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
       
       val result = await(service.findById(signature.id))
       
-      result must be(defined)
-      result.get.id mustBe signature.id
-      result.get.userId mustBe user.id
-      result.get.waiverId mustBe waiver.id
+      result.must(be(defined))
+      result.get.id.mustBe(signature.id)
+      result.get.userId.mustBe(user.id)
+      result.get.waiverId.mustBe(waiver.id)
     }
 
     "return None when not found" in {
       val result = await(service.findById(randomString()))
-      result mustBe None
+      result.mustBe(None)
     }
   }
 
@@ -101,7 +107,7 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
         offset = 0
       ))
       
-      result mustBe empty
+      result.mustBe(empty)
     }
   }
 }

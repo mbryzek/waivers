@@ -4,6 +4,8 @@ import play.api.mvc._
 import play.api.libs.json._
 import services._
 import models.internal._
+import io.bryzek.waivers.api.v0.{models => apiModels}
+import io.bryzek.waivers.api.v0.models.json._
 import cats.data.ValidatedNec
 import cats.implicits._
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,9 +19,59 @@ class WaiversController @Inject()(
   signatureService: SignatureService
 )(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
+  // Conversion methods from internal models to API models
+  private def toApiProject(internal: Project): apiModels.Project = {
+    apiModels.Project(
+      id = internal.id,
+      name = internal.name,
+      slug = internal.slug,
+      description = internal.description,
+      isActive = internal.isActive
+    )
+  }
+
+  private def toApiWaiver(internal: Waiver): apiModels.Waiver = {
+    apiModels.Waiver(
+      id = internal.id,
+      projectId = internal.projectId,
+      version = internal.version,
+      title = internal.title,
+      content = internal.content,
+      isCurrent = internal.isCurrent
+    )
+  }
+
+  private def toApiUser(internal: User): apiModels.User = {
+    apiModels.User(
+      id = internal.id,
+      email = internal.email,
+      firstName = internal.firstName,
+      lastName = internal.lastName,
+      phone = internal.phone
+    )
+  }
+
+  private def toApiSignature(internal: Signature, user: User, waiver: Waiver): apiModels.Signature = {
+    val apiSignatureStatus = internal.status match {
+      case SignatureStatus.Pending => apiModels.SignatureStatus.Pending
+      case SignatureStatus.Signed => apiModels.SignatureStatus.Signed
+      case SignatureStatus.Expired => apiModels.SignatureStatus.Expired
+      case SignatureStatus.Cancelled => apiModels.SignatureStatus.Cancelled
+    }
+
+    apiModels.Signature(
+      id = internal.id,
+      user = toApiUser(user),
+      waiver = toApiWaiver(waiver),
+      status = apiSignatureStatus,
+      signedAt = internal.signedAt,
+      signnowUrl = None // TODO: Set from signature request when available
+    )
+  }
+
   def getProject(slug: String): Action[AnyContent] = Action.async { implicit request =>
     projectService.findBySlug(slug) map {
-      case Some(project) => Ok(Json.toJson(project))
+      case Some(project) => Ok(Json.toJson(toApiProject(project)))
       case None => NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found"))
     }
   }
@@ -31,7 +83,7 @@ class WaiversController @Inject()(
         case None => Future.successful(NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found")))
         case Some(project) =>
           waiverService.findCurrentByProjectId(project.id) map {
-            case Some(waiver) => Ok(Json.toJson(waiver))
+            case Some(waiver) => Ok(Json.toJson(toApiWaiver(waiver)))
             case None => NotFound(Json.obj("code" -> "waiver_not_found", "message" -> "No current waiver found for this project"))
           }
       }
@@ -54,8 +106,8 @@ class WaiversController @Inject()(
           result <- projectOpt match {
             case None => Future.successful(NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found")))
             case Some(project) =>
-              signatureService.createSignature(project, form, request.remoteAddress) map { signature =>
-                Created(Json.toJson(signature))
+              signatureService.createSignature(project, form, request.remoteAddress) map { case (signature, user, waiver) =>
+                Created(Json.toJson(toApiSignature(signature, user, waiver)))
               } recover {
                 case ex => InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> ex.getMessage))
               }
@@ -65,8 +117,8 @@ class WaiversController @Inject()(
   }
 
   def getSignature(id: String): Action[AnyContent] = Action.async { implicit request =>
-    signatureService.findById(id) map {
-      case Some(signature) => Ok(Json.toJson(signature))
+    signatureService.findByIdWithRelated(id) map {
+      case Some((signature, user, waiver)) => Ok(Json.toJson(toApiSignature(signature, user, waiver)))
       case None => NotFound(Json.obj("code" -> "signature_not_found", "message" -> s"Signature with id '$id' not found"))
     }
   }

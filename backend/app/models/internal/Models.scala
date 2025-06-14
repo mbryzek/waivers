@@ -1,9 +1,12 @@
 package models.internal
 
+import io.bryzek.waivers.api.v0.models
+import io.bryzek.waivers.api.v0.models.json.*
 import play.api.libs.json._
 import org.joda.time.DateTime
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JodaReads._
+import javax.inject.Inject
 
 // Internal models that correspond to API Builder generated models
 // but are used internally by the application
@@ -13,7 +16,6 @@ case class Project(
   name: String,
   slug: String,
   description: Option[String],
-  waiverTemplate: String,
   isActive: Boolean,
   createdAt: DateTime,
   updatedAt: DateTime,
@@ -27,14 +29,13 @@ object Project {
       name = generated.name,
       slug = generated.slug,
       description = generated.description,
-      waiverTemplate = generated.waiverTemplate,
       isActive = generated.isActive,
       createdAt = generated.createdAt,
       updatedAt = generated.updatedAt,
       updatedByUserId = generated.updatedByUserId
     )
   }
-  
+
   implicit val format: Format[Project] = Json.format[Project]
 }
 
@@ -62,7 +63,7 @@ object User {
       updatedByUserId = generated.updatedByUserId
     )
   }
-  
+
   implicit val format: Format[User] = Json.format[User]
 }
 
@@ -92,7 +93,7 @@ object Waiver {
       updatedByUserId = generated.updatedByUserId
     )
   }
-  
+
   implicit val format: Format[Waiver] = Json.format[Waiver]
 }
 
@@ -108,6 +109,24 @@ case class SignatureTemplate(
   updatedByUserId: String
 )
 
+object SignatureTemplate {
+  def apply(generated: db.generated.SignatureTemplate): SignatureTemplate = {
+    SignatureTemplate(
+      id = generated.id,
+      projectId = generated.projectId,
+      provider = SignatureProvider.fromString(generated.provider).getOrElse(SignatureProvider.HelloSign),
+      providerTemplateId = generated.providerTemplateId,
+      name = generated.name,
+      isActive = generated.isActive,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+
+  implicit val format: Format[SignatureTemplate] = Json.format[SignatureTemplate]
+}
+
 case class SignatureRequest(
   id: String,
   signatureTemplateId: String,
@@ -120,6 +139,25 @@ case class SignatureRequest(
   updatedAt: DateTime,
   updatedByUserId: String
 )
+
+object SignatureRequest {
+  def apply(generated: db.generated.SignatureRequest): SignatureRequest = {
+    SignatureRequest(
+      id = generated.id,
+      signatureTemplateId = generated.signatureTemplateId,
+      provider = SignatureProvider.fromString(generated.provider).getOrElse(SignatureProvider.HelloSign),
+      providerRequestId = generated.providerRequestId,
+      signingUrl = generated.signingUrl,
+      status = SignatureRequestStatus.fromString(generated.status).getOrElse(SignatureRequestStatus.Created),
+      metadata = generated.metadata,
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+
+  implicit val format: Format[SignatureRequest] = Json.format[SignatureRequest]
+}
 
 case class Signature(
   id: String,
@@ -153,7 +191,7 @@ object Signature {
       updatedByUserId = generated.updatedByUserId
     )
   }
-  
+
   implicit val format: Format[Signature] = Json.format[Signature]
 }
 
@@ -266,13 +304,6 @@ case class GenericError(
   message: String
 )
 
-object SignatureTemplate {
-  implicit val format: Format[SignatureTemplate] = Json.format[SignatureTemplate]
-}
-
-object SignatureRequest {
-  implicit val format: Format[SignatureRequest] = Json.format[SignatureRequest]
-}
 
 object WaiverForm {
   implicit val format: Format[WaiverForm] = Json.format[WaiverForm]

@@ -19,7 +19,7 @@ class SignatureService @Inject()(
   @unused helloSignService: HelloSignService
 )(implicit ec: ExecutionContext) {
 
-  def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[Signature] = {
+  def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[(Signature, User, Waiver)] = {
     for {
       // Find or create user
       user <- findOrCreateUser(form)
@@ -35,11 +35,28 @@ class SignatureService @Inject()(
       // Initiate HelloSign process (placeholder for now)
       _ <- Future.successful(()) // TODO: Integrate with HelloSign
       
-    } yield signature
+    } yield (signature, user, waiver)
   }
 
   def findById(id: String): Future[Option[Signature]] = Future {
     signaturesDao.findById(id).map(Signature(_))
+  }
+
+  def findByIdWithRelated(id: String): Future[Option[(Signature, User, Waiver)]] = {
+    signaturesDao.findById(id) match {
+      case None => Future.successful(None)
+      case Some(generatedSignature) =>
+        val signature = Signature(generatedSignature)
+        for {
+          userOpt <- Future(usersDao.findById(signature.userId).map(User(_)))
+          waiverOpt <- waiverService.findById(signature.waiverId)
+        } yield {
+          for {
+            user <- userOpt
+            waiver <- waiverOpt
+          } yield (signature, user, waiver)
+        }
+    }
   }
 
   def findWithFilters(

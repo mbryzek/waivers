@@ -37,6 +37,92 @@ This is a waivers application with the following components:
 ### Scala Compilation Workflow
 After making changes to the scala code, run the "sbt Test/compile" tool to verify that the code compiles. If not, review the errors and iterate on the implementation until all compilation errors are fixed.
 
+### Internal Models Pattern
+All internal case classes in `models.internal.Models` follow this established pattern:
+
+#### For Database-Backed Models:
+```scala
+case class ModelName(
+  // fields matching the API model structure
+  id: String,
+  // ... other fields
+  createdAt: DateTime,
+  updatedAt: DateTime,
+  updatedByUserId: String
+)
+
+object ModelName {
+  def apply(generated: db.generated.ModelName): ModelName = {
+    ModelName(
+      id = generated.id,
+      // ... field mappings with enum conversions where needed
+      enumField = EnumType.fromString(generated.enumField).getOrElse(EnumType.DefaultValue),
+      createdAt = generated.createdAt,
+      updatedAt = generated.updatedAt,
+      updatedByUserId = generated.updatedByUserId
+    )
+  }
+
+  implicit val format: Format[ModelName] = Json.format[ModelName]
+}
+```
+
+#### Key Requirements:
+- **Wrap db.generated models**: Use companion object `apply` method to convert from database models
+- **Enum conversions**: Database stores enums as strings, internal models use proper Scala sealed traits
+- **JSON serialization**: Use Play's `Json.format` for automatic JSON conversion
+- **API Builder imports**: Use `io.bryzek.waivers.api.v0.models.json.*` for generated JSON converters when needed
+
+#### Established Internal Models:
+- **Project**: Wraps `db.generated.Project`
+- **User**: Wraps `db.generated.User` 
+- **Waiver**: Wraps `db.generated.Waiver`
+- **SignatureTemplate**: Wraps `db.generated.SignatureTemplate` with `SignatureProvider` enum conversion
+- **SignatureRequest**: Wraps `db.generated.SignatureRequest` with `SignatureProvider` and `SignatureRequestStatus` enum conversions
+- **Signature**: Wraps `db.generated.Signature` with `SignatureStatus` enum conversion
+
+### Scala 3 Style Guidelines
+This project follows the [Scala Style Guide](https://docs.scala-lang.org/style/) with these key conventions:
+
+#### Import Conventions:
+- **Wildcard imports**: Use `*` (not `_`) for Scala 3 compatibility
+  ```scala
+  import io.bryzek.waivers.api.v0.models.json.*
+  import play.api.libs.json.*
+  import models.internal.*
+  ```
+- **Qualified imports**: Use aliases to avoid conflicts
+  ```scala
+  import io.bryzek.waivers.api.v0.{models => apiModels}
+  ```
+- **Specific imports**: Group related imports with curly braces
+  ```scala
+  import helpers.{DatabaseHelpers, DefaultServerSpec, MockApiClient}
+  ```
+
+#### Naming Conventions:
+- **Classes/Traits**: PascalCase (`ProjectService`, `DatabaseHelpers`)
+- **Objects**: PascalCase (`SignatureProvider`, `SignatureStatus`)
+- **Methods/Variables**: camelCase (`createProject`, `uniqueSlug`)
+- **Constants**: PascalCase (`HelloSign`, `DocuSign`)
+- **Type Parameters**: Single uppercase letters (`T`, `A`, `B`)
+
+#### Code Organization:
+- **Package structure**: Follow domain-driven organization (`models.internal`, `services`, `controllers`)
+- **Method ordering**: Group related functionality together
+- **Companion objects**: Place directly after case class definition
+- **Import ordering**: Standard library → Third-party → Project imports
+
+#### JSON and API Patterns:
+- **Use API Builder generated converters** instead of manual JSON field extraction
+- **Prefer type-safe model parsing**: `contentAsJson(response).as[apiModels.Project]` over `(json \ "field").as[String]`
+- **Transform internal models to API models** in controllers before serialization
+
+### API and Database Design
+- Prefer enums over boolean types in API and database schemas
+  - Instead of using `is_active: boolean`, use `status: enum` with values like `active` or `inactive`
+  - This provides more explicit and descriptive state representation
+
 ### Testing
 - Use ScalaTest with PlaySpec for testing
 - Service tests extend `DefaultAppSpec` with helper traits like `DatabaseHelpers`
