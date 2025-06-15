@@ -58,7 +58,7 @@ lazy val root = (project in file("."))
   .settings(resolversSettings)
   .settings(
     PlayKeys.fileWatchService := play.dev.filewatch.FileWatchService.jdk7(play.sbt.run.toLoggerProxy(sLog.value)),
-    PlayKeys.playDefaultPort := 9100,
+    PlayKeys.playDefaultPort := 9300,
     Compile / doc / sources := Seq.empty,
     Compile / packageDoc / publishArtifact := false,
     testOptions += Tests.Argument("-oF"),

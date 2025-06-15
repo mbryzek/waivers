@@ -1,0 +1,17 @@
+code:
+  bryzek:
+    waivers-api:
+      version: latest
+      generators:
+        - generator: elm_v2
+          target: ./src
+    waivers-admin:
+      version: latest
+      generators:
+        - generator: elm_v2
+          target: ./src
+    waivers-error:
+      version: latest
+      generators:
+        - generator: elm_v2
+          target: ./src

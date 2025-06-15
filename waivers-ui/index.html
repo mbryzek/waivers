@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="h-full bg-white">
+
+<head>
+  <title>Waivers</title>
+  <script src="/elm.js"></script>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/style.css" type="text/css" />
+</head>
+
+<body class="h-full">
+  <div id="elm"></div>
+  <script>
+    var app = Elm.Main.init({
+        flags: {
+            version: "1.0.0"
+        },
+        node: document.getElementById("elm"),
+    });
+    
+    if (app.ports && app.ports.redirectToExternalUrl) {
+      app.ports.redirectToExternalUrl.subscribe(function(url) {
+        window.location.href = url;
+      });
+    }
+  </script>
+</body>
+</html>

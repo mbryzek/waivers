@@ -92,7 +92,7 @@ class WaiversController @Inject()(
 
   def createSignature(slug: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     val result = for {
-      form <- request.body.validate[WaiverForm].asEither.leftMap(errors => 
+      form <- request.body.validate[apiModels.WaiverForm].asEither.leftMap(errors => 
         List(GenericError("validation_failed", "Invalid form data: " + JsError.toJson(errors)))
       )
       validatedForm <- validateWaiverForm(form)
@@ -106,7 +106,7 @@ class WaiversController @Inject()(
           result <- projectOpt match {
             case None => Future.successful(NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found")))
             case Some(project) =>
-              signatureService.createSignature(project, form, request.remoteAddress) map { case (signature, user, waiver) =>
+              signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress) map { case (signature, user, waiver) =>
                 Created(Json.toJson(toApiSignature(signature, user, waiver)))
               } recover {
                 case ex => InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> ex.getMessage))
@@ -123,8 +123,17 @@ class WaiversController @Inject()(
     }
   }
 
-  private def validateWaiverForm(form: WaiverForm): Either[List[GenericError], WaiverForm] = {
-    val validations: ValidatedNec[String, WaiverForm] = (
+  private def toInternalWaiverForm(apiForm: apiModels.WaiverForm): WaiverForm = {
+    WaiverForm(
+      firstName = apiForm.firstName,
+      lastName = apiForm.lastName,
+      email = apiForm.email,
+      phone = apiForm.phone
+    )
+  }
+
+  private def validateWaiverForm(form: apiModels.WaiverForm): Either[List[GenericError], apiModels.WaiverForm] = {
+    val validations: ValidatedNec[String, apiModels.WaiverForm] = (
       validateNonEmpty("first_name", form.firstName),
       validateNonEmpty("last_name", form.lastName),
       validateEmail("email", form.email),
