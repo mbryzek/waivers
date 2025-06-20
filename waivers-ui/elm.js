@@ -4390,6 +4390,52 @@ function _Url_percentDecode(string)
 }
 
 
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+
+
+
 // SEND REQUEST
 
 var _Http_toTask = F3(function(router, toTask, request)
@@ -5489,12 +5535,16 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$application = _Browser_application;
 var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$GotCurrentYear = function (a) {
+	return {$: 'GotCurrentYear', a: a};
+};
 var $author$project$Main$Model = function (a) {
 	return {$: 'Model', a: a};
 };
 var $author$project$Main$PageWaiverMsg = function (a) {
 	return {$: 'PageWaiverMsg', a: a};
 };
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$Route$RouteAdmin = {$: 'RouteAdmin'};
 var $author$project$Route$RouteAdminProjectDetail = function (a) {
 	return {$: 'RouteAdminProjectDetail', a: a};
@@ -6332,7 +6382,6 @@ var $elm$url$Url$Parser$parse = F2(
 var $author$project$Route$fromUrl = function (url) {
 	return A2($elm$url$Url$Parser$parse, $author$project$Route$matchRoute, url);
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Page$Waiver$init = function (slug) {
 	return _Utils_Tuple2(
@@ -6340,9 +6389,101 @@ var $author$project$Page$Waiver$init = function (slug) {
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Cmd$map = _Platform_map;
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$flooredDiv = F2(
+	function (numerator, denominator) {
+		return $elm$core$Basics$floor(numerator / denominator);
+	});
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$time$Time$toAdjustedMinutesHelp = F3(
+	function (defaultOffset, posixMinutes, eras) {
+		toAdjustedMinutesHelp:
+		while (true) {
+			if (!eras.b) {
+				return posixMinutes + defaultOffset;
+			} else {
+				var era = eras.a;
+				var olderEras = eras.b;
+				if (_Utils_cmp(era.start, posixMinutes) < 0) {
+					return posixMinutes + era.offset;
+				} else {
+					var $temp$defaultOffset = defaultOffset,
+						$temp$posixMinutes = posixMinutes,
+						$temp$eras = olderEras;
+					defaultOffset = $temp$defaultOffset;
+					posixMinutes = $temp$posixMinutes;
+					eras = $temp$eras;
+					continue toAdjustedMinutesHelp;
+				}
+			}
+		}
+	});
+var $elm$time$Time$toAdjustedMinutes = F2(
+	function (_v0, time) {
+		var defaultOffset = _v0.a;
+		var eras = _v0.b;
+		return A3(
+			$elm$time$Time$toAdjustedMinutesHelp,
+			defaultOffset,
+			A2(
+				$elm$time$Time$flooredDiv,
+				$elm$time$Time$posixToMillis(time),
+				60000),
+			eras);
+	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$time$Time$toCivil = function (minutes) {
+	var rawDay = A2($elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
+	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
+	var dayOfEra = rawDay - (era * 146097);
+	var yearOfEra = ((((dayOfEra - ((dayOfEra / 1460) | 0)) + ((dayOfEra / 36524) | 0)) - ((dayOfEra / 146096) | 0)) / 365) | 0;
+	var dayOfYear = dayOfEra - (((365 * yearOfEra) + ((yearOfEra / 4) | 0)) - ((yearOfEra / 100) | 0));
+	var mp = (((5 * dayOfYear) + 2) / 153) | 0;
+	var month = mp + ((mp < 10) ? 3 : (-9));
+	var year = yearOfEra + (era * 400);
+	return {
+		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
+		month: month,
+		year: year + ((month <= 2) ? 1 : 0)
+	};
+};
+var $elm$time$Time$toYear = F2(
+	function (zone, time) {
+		return $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).year;
+	});
+var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
 var $author$project$Main$init = F3(
 	function (flags, url, key) {
 		var route = $author$project$Route$fromUrl(url);
+		var getCurrentYearCmd = A2(
+			$elm$core$Task$perform,
+			function (posix) {
+				return $author$project$Main$GotCurrentYear(
+					A2($elm$time$Time$toYear, $elm$time$Time$utc, posix));
+			},
+			$elm$time$Time$now);
 		var _v0 = function () {
 			if ((route.$ === 'Just') && (route.a.$ === 'RouteWaiver')) {
 				var slug = route.a.a;
@@ -6359,8 +6500,12 @@ var $author$project$Main$init = F3(
 		var pageWaiverModel = _v0.a;
 		var pageWaiverCmd = _v0.b;
 		var appModel = $author$project$Main$Model(
-			{key: key, pageWaiver: pageWaiverModel, route: route, url: url, version: flags.version});
-		return _Utils_Tuple2(appModel, pageWaiverCmd);
+			{currentYear: $elm$core$Maybe$Nothing, key: key, pageWaiver: pageWaiverModel, route: route, url: url, version: flags.version});
+		return _Utils_Tuple2(
+			appModel,
+			$elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[pageWaiverCmd, getCurrentYearCmd])));
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -6985,9 +7130,6 @@ var $elm$parser$Parser$Advanced$end = function (x) {
 };
 var $elm$parser$Parser$end = $elm$parser$Parser$Advanced$end($elm$parser$Parser$ExpectingEnd);
 var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
 var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
 	function (isGood, offset, row, col, s0) {
 		chompWhileHelp:
@@ -7113,10 +7255,6 @@ var $rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
 	},
 	$elm$parser$Parser$getChompedString(
 		$elm$parser$Parser$chompWhile($elm$core$Char$isDigit)));
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
 	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
 		return $elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
@@ -7977,7 +8115,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					$author$project$Main$Model(updatedModel),
 					pageWaiverCmd);
-			default:
+			case 'PageWaiverMsg':
 				var pageMsg = msg.a;
 				var _v6 = model.pageWaiver;
 				if (_v6.$ === 'Just') {
@@ -7998,6 +8136,16 @@ var $author$project$Main$update = F2(
 						$author$project$Main$Model(model),
 						$elm$core$Platform$Cmd$none);
 				}
+			default:
+				var year = msg.a;
+				return _Utils_Tuple2(
+					$author$project$Main$Model(
+						_Utils_update(
+							model,
+							{
+								currentYear: $elm$core$Maybe$Just(year)
+							})),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -8023,34 +8171,44 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $author$project$Templates$Shell$viewFooter = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('bg-gray-100 border-t border-gray-200 py-6 mt-16')
-		]),
-	_List_fromArray(
-		[
-			A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('container mx-auto px-4 text-center')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('text-sm text-gray-600')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('© 2024 Waivers. All rights reserved.')
-						]))
-				]))
-		]));
+var $author$project$Templates$Shell$viewFooter = function (currentYear) {
+	var year = function () {
+		if (currentYear.$ === 'Just') {
+			var yr = currentYear.a;
+			return $elm$core$String$fromInt(yr);
+		} else {
+			return '2025';
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('bg-gray-100 border-t border-gray-200 py-6 mt-16')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('container mx-auto px-4 text-center')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$p,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text-sm text-gray-600')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('© ' + (year + ' Lake View Summit LLC. All rights reserved.'))
+							]))
+					]))
+			]));
+};
 var $elm$html$Html$nav = _VirtualDom_node('nav');
 var $author$project$Templates$Shell$viewHeader = A2(
 	$elm$html$Html$nav,
@@ -8131,6 +8289,7 @@ var $author$project$Templates$Shell$viewHeader = A2(
 var $author$project$Templates$Shell$view = function (_v0) {
 	var title = _v0.title;
 	var content = _v0.content;
+	var currentYear = _v0.currentYear;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -8147,289 +8306,295 @@ var $author$project$Templates$Shell$view = function (_v0) {
 						$elm$html$Html$Attributes$class('container mx-auto px-4 py-8')
 					]),
 				content),
-				$author$project$Templates$Shell$viewFooter
+				$author$project$Templates$Shell$viewFooter(currentYear)
 			]));
 };
-var $author$project$Page$Admin$view = $author$project$Templates$Shell$view(
-	{
-		content: _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('max-w-4xl mx-auto')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h1,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-3xl font-bold text-gray-900 mb-6')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Admin Dashboard')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('grid md:grid-cols-2 lg:grid-cols-3 gap-6')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Projects')
-											])),
-										A2(
-										$elm$html$Html$p,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-gray-600 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Manage waiver projects and their settings.')
-											])),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('/admin/projects'),
-												$elm$html$Html$Attributes$class('inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Manage Projects')
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Signatures')
-											])),
-										A2(
-										$elm$html$Html$p,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-gray-600 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('View and export signed waivers.')
-											])),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('/admin/signatures'),
-												$elm$html$Html$Attributes$class('inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('View Signatures')
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Reports')
-											])),
-										A2(
-										$elm$html$Html$p,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-gray-600 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Generate reports and analytics.')
-											])),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('#'),
-												$elm$html$Html$Attributes$class('inline-block bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Generate Reports')
-											]))
-									]))
-							]))
-					]))
-			]),
-		title: 'Admin Dashboard'
-	});
-var $author$project$Page$Index$view = $author$project$Templates$Shell$view(
-	{
-		content: _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('max-w-4xl mx-auto')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h1,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-4xl font-bold text-gray-900 mb-6')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Digital Waiver Signing System')
-							])),
-						A2(
-						$elm$html$Html$p,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-xl text-gray-600 mb-8')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Create, manage, and collect legally binding digital signatures on waivers for your organization.')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('grid md:grid-cols-2 gap-8')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-2xl font-semibold text-gray-900 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('For Participants')
-											])),
-										A2(
-										$elm$html$Html$p,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-gray-600 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Sign your waiver digitally with HelloSign integration for legally binding signatures.')
-											])),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('/waiver/demo'),
-												$elm$html$Html$Attributes$class('inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Try Demo Waiver')
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$h2,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-2xl font-semibold text-gray-900 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('For Administrators')
-											])),
-										A2(
-										$elm$html$Html$p,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('text-gray-600 mb-4')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Manage waiver projects, view signatures, and export data for your organization.')
-											])),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$href('/admin'),
-												$elm$html$Html$Attributes$class('inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Admin Dashboard')
-											]))
-									]))
-							]))
-					]))
-			]),
-		title: 'Welcome to Waivers'
-	});
+var $author$project$Page$Admin$view = function (currentYear) {
+	return $author$project$Templates$Shell$view(
+		{
+			content: _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('max-w-4xl mx-auto')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h1,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('text-3xl font-bold text-gray-900 mb-6')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Admin Dashboard')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('grid md:grid-cols-2 lg:grid-cols-3 gap-6')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$h2,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Projects')
+												])),
+											A2(
+											$elm$html$Html$p,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-gray-600 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Manage waiver projects and their settings.')
+												])),
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('/admin/projects'),
+													$elm$html$Html$Attributes$class('inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Manage Projects')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$h2,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Signatures')
+												])),
+											A2(
+											$elm$html$Html$p,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-gray-600 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('View and export signed waivers.')
+												])),
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('/admin/signatures'),
+													$elm$html$Html$Attributes$class('inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('View Signatures')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$h2,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-3')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Reports')
+												])),
+											A2(
+											$elm$html$Html$p,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-gray-600 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Generate reports and analytics.')
+												])),
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('#'),
+													$elm$html$Html$Attributes$class('inline-block bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Generate Reports')
+												]))
+										]))
+								]))
+						]))
+				]),
+			currentYear: currentYear,
+			title: 'Admin Dashboard'
+		});
+};
+var $author$project$Page$Index$view = function (currentYear) {
+	return $author$project$Templates$Shell$view(
+		{
+			content: _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('max-w-4xl mx-auto')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h1,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('text-4xl font-bold text-gray-900 mb-6')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Digital Waiver Signing System')
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('text-xl text-gray-600 mb-8')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Create, manage, and collect legally binding digital signatures on waivers for your organization.')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('grid md:grid-cols-2 gap-8')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$h2,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-2xl font-semibold text-gray-900 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('For Participants')
+												])),
+											A2(
+											$elm$html$Html$p,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-gray-600 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Sign your waiver digitally with HelloSign integration for legally binding signatures.')
+												])),
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('/waiver/demo'),
+													$elm$html$Html$Attributes$class('inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Try Demo Waiver')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$h2,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-2xl font-semibold text-gray-900 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('For Administrators')
+												])),
+											A2(
+											$elm$html$Html$p,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-gray-600 mb-4')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Manage waiver projects, view signatures, and export data for your organization.')
+												])),
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('/admin'),
+													$elm$html$Html$Attributes$class('inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Admin Dashboard')
+												]))
+										]))
+								]))
+						]))
+				]),
+			currentYear: currentYear,
+			title: 'Welcome to Waivers'
+		});
+};
 var $author$project$Page$Waiver$EmailChanged = function (a) {
 	return {$: 'EmailChanged', a: a};
 };
@@ -8564,169 +8729,171 @@ var $author$project$Templates$Forms$textInput = function (_v0) {
 			]),
 		_List_Nil);
 };
-var $author$project$Page$Waiver$view = function (model) {
-	return $author$project$Templates$Shell$view(
-		{
-			content: _List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('max-w-2xl mx-auto')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$h1,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('text-3xl font-bold text-gray-900 mb-6')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Sign Waiver: ' + model.slug)
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$h2,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-4')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Waiver Agreement')
-										])),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('prose text-gray-700 mb-6')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$p,
-											_List_Nil,
-											_List_fromArray(
-												[
-													$elm$html$Html$text('By signing this waiver, you acknowledge that you understand and agree to the terms and conditions of participation. This includes assuming all risks associated with the activity and releasing the organization from liability.')
-												])),
-											A2(
-											$elm$html$Html$p,
-											_List_Nil,
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Please fill out your information below and click \'Sign Waiver\' to proceed with digital signature via HelloSign.')
-												]))
-										])),
-									function () {
-									var _v0 = model.error;
-									if (_v0.$ === 'Just') {
-										var errorMsg = _v0.a;
-										return A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('bg-red-50 border border-red-200 rounded-md p-4 mb-4')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('flex')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('text-sm text-red-700')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(errorMsg)
-																]))
-														]))
-												]));
-									} else {
-										return $elm$html$Html$text('');
-									}
-								}(),
-									A2(
-									$elm$html$Html$form,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onSubmit($author$project$Page$Waiver$SignWaiverClicked)
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$author$project$Templates$Forms$formGroup,
-											'First Name',
-											$author$project$Templates$Forms$textInput(
-												{onInput: $author$project$Page$Waiver$FirstNameChanged, placeholder: 'Enter your first name', value: model.firstName})),
-											A2(
-											$author$project$Templates$Forms$formGroup,
-											'Last Name',
-											$author$project$Templates$Forms$textInput(
-												{onInput: $author$project$Page$Waiver$LastNameChanged, placeholder: 'Enter your last name', value: model.lastName})),
-											A2(
-											$author$project$Templates$Forms$formGroup,
-											'Email Address',
-											$author$project$Templates$Forms$textInput(
-												{onInput: $author$project$Page$Waiver$EmailChanged, placeholder: 'Enter your email address', value: model.email})),
-											A2(
-											$author$project$Templates$Forms$formGroup,
-											'Phone Number (Optional)',
-											$author$project$Templates$Forms$textInput(
-												{onInput: $author$project$Page$Waiver$PhoneChanged, placeholder: 'Enter your phone number', value: model.phone})),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('flex justify-end pt-4')
-												]),
-											_List_fromArray(
-												[
-													function () {
-													var isValid = !($elm$core$String$isEmpty(model.firstName) || ($elm$core$String$isEmpty(model.lastName) || $elm$core$String$isEmpty(model.email)));
-													var buttonText = model.isSubmitting ? 'Processing...' : ((!isValid) ? 'Please fill required fields' : 'Sign Waiver');
-													return A2(
-														$elm$html$Html$button,
+var $author$project$Page$Waiver$view = F2(
+	function (model, currentYear) {
+		return $author$project$Templates$Shell$view(
+			{
+				content: _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('max-w-2xl mx-auto')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h1,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('text-3xl font-bold text-gray-900 mb-6')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Sign Waiver: ' + model.slug)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('bg-white p-6 rounded-lg shadow-md')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$h2,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('text-xl font-semibold text-gray-900 mb-4')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Waiver Agreement')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('prose text-gray-700 mb-6')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('By signing this waiver, you acknowledge that you understand and agree to the terms and conditions of participation. This includes assuming all risks associated with the activity and releasing the organization from liability.')
+													])),
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Please fill out your information below and click \'Sign Waiver\' to proceed with digital signature via HelloSign.')
+													]))
+											])),
+										function () {
+										var _v0 = model.error;
+										if (_v0.$ === 'Just') {
+											var errorMsg = _v0.a;
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('bg-red-50 border border-red-200 rounded-md p-4 mb-4')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$div,
 														_List_fromArray(
 															[
-																$elm$html$Html$Events$onClick($author$project$Page$Waiver$SignWaiverClicked),
-																$elm$html$Html$Attributes$disabled(model.isSubmitting || (!isValid)),
-																$elm$html$Html$Attributes$class(
-																(isValid && (!model.isSubmitting)) ? 'px-4 py-2 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' : 'px-4 py-2 bg-gray-300 text-gray-500 font-medium rounded-md shadow-sm cursor-not-allowed')
+																$elm$html$Html$Attributes$class('flex')
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text(buttonText)
-															]));
-												}()
-												]))
-										]))
-								]))
-						]))
-				]),
-			title: 'Sign Waiver'
-		});
-};
-var $author$project$Main$viewContent = F2(
-	function (maybeRoute, pageWaiverModel) {
+																A2(
+																$elm$html$Html$div,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('text-sm text-red-700')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(errorMsg)
+																	]))
+															]))
+													]));
+										} else {
+											return $elm$html$Html$text('');
+										}
+									}(),
+										A2(
+										$elm$html$Html$form,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onSubmit($author$project$Page$Waiver$SignWaiverClicked)
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$author$project$Templates$Forms$formGroup,
+												'First Name',
+												$author$project$Templates$Forms$textInput(
+													{onInput: $author$project$Page$Waiver$FirstNameChanged, placeholder: 'Enter your first name', value: model.firstName})),
+												A2(
+												$author$project$Templates$Forms$formGroup,
+												'Last Name',
+												$author$project$Templates$Forms$textInput(
+													{onInput: $author$project$Page$Waiver$LastNameChanged, placeholder: 'Enter your last name', value: model.lastName})),
+												A2(
+												$author$project$Templates$Forms$formGroup,
+												'Email Address',
+												$author$project$Templates$Forms$textInput(
+													{onInput: $author$project$Page$Waiver$EmailChanged, placeholder: 'Enter your email address', value: model.email})),
+												A2(
+												$author$project$Templates$Forms$formGroup,
+												'Phone Number (Optional)',
+												$author$project$Templates$Forms$textInput(
+													{onInput: $author$project$Page$Waiver$PhoneChanged, placeholder: 'Enter your phone number', value: model.phone})),
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('flex justify-end pt-4')
+													]),
+												_List_fromArray(
+													[
+														function () {
+														var isValid = !($elm$core$String$isEmpty(model.firstName) || ($elm$core$String$isEmpty(model.lastName) || $elm$core$String$isEmpty(model.email)));
+														var buttonText = model.isSubmitting ? 'Processing...' : ((!isValid) ? 'Please fill required fields' : 'Sign Waiver');
+														return A2(
+															$elm$html$Html$button,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Events$onClick($author$project$Page$Waiver$SignWaiverClicked),
+																	$elm$html$Html$Attributes$disabled(model.isSubmitting || (!isValid)),
+																	$elm$html$Html$Attributes$class(
+																	(isValid && (!model.isSubmitting)) ? 'px-4 py-2 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' : 'px-4 py-2 bg-gray-300 text-gray-500 font-medium rounded-md shadow-sm cursor-not-allowed')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(buttonText)
+																]));
+													}()
+													]))
+											]))
+									]))
+							]))
+					]),
+				currentYear: currentYear,
+				title: 'Sign Waiver'
+			});
+	});
+var $author$project$Main$viewContent = F3(
+	function (maybeRoute, pageWaiverModel, currentYear) {
 		if (maybeRoute.$ === 'Nothing') {
 			return A2(
 				$elm$html$Html$div,
@@ -8761,14 +8928,14 @@ var $author$project$Main$viewContent = F2(
 			var route = maybeRoute.a;
 			switch (route.$) {
 				case 'RouteHome':
-					return $author$project$Page$Index$view;
+					return $author$project$Page$Index$view(currentYear);
 				case 'RouteWaiver':
 					if (pageWaiverModel.$ === 'Just') {
 						var model = pageWaiverModel.a;
 						return A2(
 							$elm$html$Html$map,
 							$author$project$Main$PageWaiverMsg,
-							$author$project$Page$Waiver$view(model));
+							A2($author$project$Page$Waiver$view, model, currentYear));
 					} else {
 						return A2(
 							$elm$html$Html$div,
@@ -8782,7 +8949,7 @@ var $author$project$Main$viewContent = F2(
 								]));
 					}
 				case 'RouteAdmin':
-					return $author$project$Page$Admin$view;
+					return $author$project$Page$Admin$view(currentYear);
 				case 'RouteAdminProjects':
 					return A2(
 						$elm$html$Html$div,
@@ -8873,7 +9040,7 @@ var $author$project$Main$view = function (_v0) {
 	return {
 		body: _List_fromArray(
 			[
-				A2($author$project$Main$viewContent, model.route, model.pageWaiver)
+				A3($author$project$Main$viewContent, model.route, model.pageWaiver, model.currentYear)
 			]),
 		title: 'Waivers'
 	};

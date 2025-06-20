@@ -19,6 +19,9 @@ POST    /admin/exports                  controllers.AdminController.exportSignat
 # HelloSign webhooks
 POST    /webhooks/hellosign             controllers.WebhookController.helloSignWebhook()
 
+# Demo/Development endpoints
+GET     /demo/sign-complete             controllers.WaiversController.signComplete(request_id: String, email: String)
+
 # Health check
 GET     /healthcheck                    controllers.HealthcheckController.index()
 

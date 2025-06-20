@@ -154,10 +154,11 @@ apiErrorToString error =
             "Validation errors: " ++ String.join ", " (List.map .message errors)
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> Maybe Int -> Html Msg
+view model currentYear =
     Shell.view
         { title = "Sign Waiver"
+        , currentYear = currentYear
         , content =
             [ div [ class "max-w-2xl mx-auto" ]
                 [ h1 [ class "text-3xl font-bold text-gray-900 mb-6" ]

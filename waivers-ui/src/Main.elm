@@ -9,6 +9,8 @@ import Page.Index as PageIndex
 import Page.Waiver as PageWaiver
 import Route exposing (Route)
 import Url
+import Time
+import Task
 
 
 type alias Flags =
@@ -33,6 +35,7 @@ type Model
         , url : Url.Url
         , route : Maybe Route
         , version : String
+        , currentYear : Maybe Int
         , pageWaiver : Maybe PageWaiver.Model
         }
 
@@ -41,6 +44,7 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | PageWaiverMsg PageWaiver.Msg
+    | GotCurrentYear Int
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -67,10 +71,16 @@ init flags url key =
                 , url = url
                 , route = route
                 , version = flags.version
+                , currentYear = Nothing
                 , pageWaiver = pageWaiverModel
                 }
+        
+        getCurrentYearCmd =
+            Task.perform 
+                (\posix -> GotCurrentYear (Time.toYear Time.utc posix))
+                Time.now
     in
-    ( appModel, pageWaiverCmd )
+    ( appModel, Cmd.batch [ pageWaiverCmd, getCurrentYearCmd ] )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -118,6 +128,9 @@ update msg (Model model) =
                 Nothing ->
                     ( Model model, Cmd.none )
 
+        GotCurrentYear year ->
+            ( Model { model | currentYear = Just year }, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -128,13 +141,13 @@ view : Model -> Browser.Document Msg
 view (Model model) =
     { title = "Waivers"
     , body =
-        [ viewContent model.route model.pageWaiver
+        [ viewContent model.route model.pageWaiver model.currentYear
         ]
     }
 
 
-viewContent : Maybe Route -> Maybe PageWaiver.Model -> H.Html Msg
-viewContent maybeRoute pageWaiverModel =
+viewContent : Maybe Route -> Maybe PageWaiver.Model -> Maybe Int -> H.Html Msg
+viewContent maybeRoute pageWaiverModel currentYear =
     case maybeRoute of
         Nothing ->
             H.div [ A.class "container mx-auto px-4 py-8" ]
@@ -145,19 +158,19 @@ viewContent maybeRoute pageWaiverModel =
         Just route ->
             case route of
                 Route.RouteHome ->
-                    PageIndex.view
+                    PageIndex.view currentYear
 
                 Route.RouteWaiver _ ->
                     case pageWaiverModel of
                         Just model ->
-                            H.map PageWaiverMsg (PageWaiver.view model)
+                            H.map PageWaiverMsg (PageWaiver.view model currentYear)
 
                         Nothing ->
                             H.div [ A.class "container mx-auto px-4 py-8" ]
                                 [ H.text "Loading..." ]
 
                 Route.RouteAdmin ->
-                    PageAdmin.view
+                    PageAdmin.view currentYear
 
                 Route.RouteAdminProjects ->
                     H.div [ A.class "container mx-auto px-4 py-8" ]

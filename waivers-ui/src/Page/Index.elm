@@ -5,10 +5,11 @@ import Html.Attributes as Attr exposing (class, href)
 import Templates.Shell as Shell
 
 
-view : Html msg
-view =
+view : Maybe Int -> Html msg
+view currentYear =
     Shell.view
         { title = "Welcome to Waivers"
+        , currentYear = currentYear
         , content =
             [ div [ class "max-w-4xl mx-auto" ]
                 [ h1 [ class "text-4xl font-bold text-gray-900 mb-6" ]

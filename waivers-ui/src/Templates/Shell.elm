@@ -1,16 +1,16 @@
 module Templates.Shell exposing (view)
 
-import Html exposing (Html, div, nav, h1, a, text)
+import Html exposing (Html, div, nav, h1, a, text, p)
 import Html.Attributes as Attr exposing (class, href)
 
 
-view : { title : String, content : List (Html msg) } -> Html msg
-view { title, content } =
+view : { title : String, content : List (Html msg), currentYear : Maybe Int } -> Html msg
+view { title, content, currentYear } =
     div [ class "min-h-screen bg-gray-50" ]
         [ viewHeader
         , div [ class "container mx-auto px-4 py-8" ]
             content
-        , viewFooter
+        , viewFooter currentYear
         ]
 
 
@@ -34,11 +34,21 @@ viewHeader =
         ]
 
 
-viewFooter : Html msg
-viewFooter =
+viewFooter : Maybe Int -> Html msg
+viewFooter currentYear =
+    let
+        year : String
+        year =
+            case currentYear of
+                Just yr ->
+                    String.fromInt yr
+
+                Nothing ->
+                    "2025"
+    in
     div [ class "bg-gray-100 border-t border-gray-200 py-6 mt-16" ]
         [ div [ class "container mx-auto px-4 text-center" ]
-            [ div [ class "text-sm text-gray-600" ]
-                [ text "© 2024 Waivers. All rights reserved." ]
+            [ p [ class "text-sm text-gray-600" ]
+                [ text ("© " ++ year ++ " Lake View Summit LLC. All rights reserved.") ]
             ]
         ]

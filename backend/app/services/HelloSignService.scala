@@ -22,25 +22,23 @@ class HelloSignService @Inject()(
   private val clientId = config.getOptional[String]("hellosign.client.id")
 
   def createSignatureRequest(signature: Signature, user: User, waiver: Waiver): Future[String] = {
-    // Placeholder implementation
-    // In a real implementation, this would:
-    // 1. Authenticate with HelloSign API using API key
-    // 2. Create a signature request from template
-    // 3. Pre-fill user information (name, email)
-    // 4. Generate signing URL
-    // 5. Return the HelloSign signature request ID
+    // Development mock implementation
+    // In production, this would call the HelloSign API to create a real signature request
+    // For now, we return a mock signature request ID that allows the demo to work
     
-    Future.successful(s"hellosign-request-${signature.id}")
+    val mockRequestId = s"hellosign-request-${signature.id}"
+    println(s"[HelloSign Mock] Created signature request $mockRequestId for user ${user.email}")
+    Future.successful(mockRequestId)
   }
 
   def getSigningUrl(signatureRequestId: String, signerEmail: String): Future[Option[String]] = {
-    // Placeholder implementation
-    // In a real implementation, this would:
-    // 1. Authenticate with HelloSign API
-    // 2. Get embedded signing URL for the specific signer
-    // 3. Return the signing URL
+    // Development mock implementation
+    // In production, this would authenticate with HelloSign API and get the real embedded signing URL
+    // For demo purposes, we'll return a URL that redirects to a success page
     
-    Future.successful(Some(s"https://app.hellosign.com/sign/placeholder-url-for-$signatureRequestId"))
+    val mockSigningUrl = s"http://localhost:9300/demo/sign-complete?request_id=$signatureRequestId&email=$signerEmail"
+    println(s"[HelloSign Mock] Generated signing URL for $signerEmail: $mockSigningUrl")
+    Future.successful(Some(mockSigningUrl))
   }
 
   def getSignedDocumentPdf(signatureRequestId: String): Future[Option[Array[Byte]]] = {

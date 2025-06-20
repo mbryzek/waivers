@@ -16,7 +16,7 @@ class SignatureService @Inject()(
   @unused signatureTemplatesDao: SignatureTemplatesDao,
   @unused signatureRequestsDao: SignatureRequestsDao,
   waiverService: WaiverService,
-  @unused helloSignService: HelloSignService
+  helloSignService: HelloSignService
 )(implicit ec: ExecutionContext) {
 
   def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[(Signature, User, Waiver)] = {
@@ -32,8 +32,11 @@ class SignatureService @Inject()(
       // Create signature record
       signature <- createSignatureRecord(user, waiver, ipAddress)
       
-      // Initiate HelloSign process (placeholder for now)
-      _ <- Future.successful(()) // TODO: Integrate with HelloSign
+      // Create HelloSign signature request
+      signatureRequestId <- helloSignService.createSignatureRequest(signature, user, waiver)
+      
+      // Update signature with HelloSign request ID
+      _ <- updateSignatureWithRequestId(signature.id, signatureRequestId)
       
     } yield (signature, user, waiver)
   }
@@ -122,5 +125,45 @@ class SignatureService @Inject()(
     Signature(signaturesDao.findById(signatureId).getOrElse(
       throw new RuntimeException(s"Failed to create signature with id $signatureId")
     ))
+  }
+
+  private def updateSignatureWithRequestId(signatureId: String, requestId: String): Future[Unit] = Future {
+    signaturesDao.findById(signatureId) match {
+      case Some(existingSignature) =>
+        val updatedForm = GeneratedSignatureForm(
+          id = existingSignature.id,
+          userId = existingSignature.userId,
+          waiverId = existingSignature.waiverId,
+          signatureTemplateId = existingSignature.signatureTemplateId,
+          signatureRequestId = Some(requestId),
+          status = existingSignature.status,
+          signedAt = existingSignature.signedAt,
+          pdfUrl = existingSignature.pdfUrl,
+          ipAddress = existingSignature.ipAddress
+        )
+        signaturesDao.updateById("system", signatureId, updatedForm)
+      case None =>
+        throw new RuntimeException(s"Signature with id $signatureId not found for update")
+    }
+  }
+
+  def getSigningUrl(signatureId: String): Future[Option[String]] = {
+    signaturesDao.findById(signatureId) match {
+      case Some(signature) =>
+        signature.signatureRequestId match {
+          case Some(requestId) =>
+            // Find user to get email for signing URL
+            usersDao.findById(signature.userId) match {
+              case Some(user) =>
+                helloSignService.getSigningUrl(requestId, user.email)
+              case None =>
+                Future.successful(None)
+            }
+          case None =>
+            Future.successful(None)
+        }
+      case None =>
+        Future.successful(None)
+    }
   }
 }

@@ -51,7 +51,7 @@ class WaiversController @Inject()(
     )
   }
 
-  private def toApiSignature(internal: Signature, user: User, waiver: Waiver): apiModels.Signature = {
+  private def toApiSignature(internal: Signature, user: User, waiver: Waiver, signingUrl: Option[String] = None): apiModels.Signature = {
     val apiSignatureStatus = internal.status match {
       case SignatureStatus.Pending => apiModels.SignatureStatus.Pending
       case SignatureStatus.Signed => apiModels.SignatureStatus.Signed
@@ -65,7 +65,7 @@ class WaiversController @Inject()(
       waiver = toApiWaiver(waiver),
       status = apiSignatureStatus,
       signedAt = internal.signedAt,
-      signnowUrl = None // TODO: Set from signature request when available
+      signnowUrl = signingUrl
     )
   }
 
@@ -106,9 +106,12 @@ class WaiversController @Inject()(
           result <- projectOpt match {
             case None => Future.successful(NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found")))
             case Some(project) =>
-              signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress) map { case (signature, user, waiver) =>
-                Created(Json.toJson(toApiSignature(signature, user, waiver)))
-              } recover {
+              (for {
+                (signature, user, waiver) <- signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress)
+                signingUrlOpt <- signatureService.getSigningUrl(signature.id)
+              } yield {
+                Created(Json.toJson(toApiSignature(signature, user, waiver, signingUrlOpt)))
+              }) recover {
                 case ex => InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> ex.getMessage))
               }
           }
@@ -121,6 +124,33 @@ class WaiversController @Inject()(
       case Some((signature, user, waiver)) => Ok(Json.toJson(toApiSignature(signature, user, waiver)))
       case None => NotFound(Json.obj("code" -> "signature_not_found", "message" -> s"Signature with id '$id' not found"))
     }
+  }
+
+  def signComplete(requestId: String, email: String): Action[AnyContent] = Action { implicit request =>
+    // Demo endpoint that simulates successful signature completion
+    // In production, this would be handled by HelloSign webhooks
+    val html = s"""
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Waiver Signed Successfully</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; text-align: center; }
+          .success { color: green; font-size: 24px; margin-bottom: 20px; }
+          .details { color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="success">✓ Waiver Signed Successfully!</div>
+        <div class="details">
+          <p>Request ID: $requestId</p>
+          <p>Email: $email</p>
+          <p>You will receive a copy of the signed waiver via email shortly.</p>
+        </div>
+      </body>
+      </html>
+    """
+    Ok(html).as("text/html")
   }
 
   private def toInternalWaiverForm(apiForm: apiModels.WaiverForm): WaiverForm = {
