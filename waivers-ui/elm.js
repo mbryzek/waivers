@@ -6672,6 +6672,7 @@ var $elm$http$Http$jsonBody = function (value) {
 		'application/json',
 		A2($elm$json$Json$Encode$encode, 0, value));
 };
+var $elm$core$Debug$log = _Debug_log;
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -7830,6 +7831,9 @@ var $author$project$Generated$IoBryzekWaiversApi$waiverFormEncoder = function (i
 };
 var $author$project$Page$Waiver$createSignatureRequest = F3(
 	function (slug, waiverForm, params) {
+		var url = params.apiHost + ('/projects/' + (slug + '/signatures'));
+		var _v0 = A2($elm$core$Debug$log, 'Making HTTP request to', url);
+		var _v1 = A2($elm$core$Debug$log, 'Request body', waiverForm);
 		return $elm$http$Http$request(
 			{
 				body: $elm$http$Http$jsonBody(
@@ -7839,7 +7843,7 @@ var $author$project$Page$Waiver$createSignatureRequest = F3(
 				method: 'POST',
 				timeout: $elm$core$Maybe$Nothing,
 				tracker: $elm$core$Maybe$Nothing,
-				url: params.apiHost + ('/projects/' + (slug + '/signatures'))
+				url: url
 			});
 	});
 var $author$project$Ports$redirectToExternalUrl = _Platform_outgoingPort('redirectToExternalUrl', $elm$json$Json$Encode$string);
@@ -7882,6 +7886,8 @@ var $author$project$Page$Waiver$update = F2(
 					phone: $elm$core$String$isEmpty(model.phone) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(model.phone)
 				};
 				var httpParams = {apiHost: 'http://localhost:9300', headers: _List_Nil};
+				var _v1 = A2($elm$core$Debug$log, 'SignWaiverClicked', 'Submitting form for slug: ' + model.slug);
+				var _v2 = A2($elm$core$Debug$log, 'WaiverForm', waiverForm);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -7889,11 +7895,14 @@ var $author$project$Page$Waiver$update = F2(
 					A3($author$project$Page$Waiver$createSignatureRequest, model.slug, waiverForm, httpParams));
 			default:
 				var result = msg.a;
+				var _v3 = A2($elm$core$Debug$log, 'SignatureResponse', result);
 				if (result.$ === 'Ok') {
 					var signature = result.a;
-					var _v2 = signature.signnowUrl;
-					if (_v2.$ === 'Just') {
-						var url = _v2.a;
+					var _v5 = A2($elm$core$Debug$log, 'Signature received', signature);
+					var _v6 = signature.signnowUrl;
+					if (_v6.$ === 'Just') {
+						var url = _v6.a;
+						var _v7 = A2($elm$core$Debug$log, 'Redirecting to', url);
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -7911,6 +7920,7 @@ var $author$project$Page$Waiver$update = F2(
 					}
 				} else {
 					var error = result.a;
+					var _v8 = A2($elm$core$Debug$log, 'API Error', error);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,

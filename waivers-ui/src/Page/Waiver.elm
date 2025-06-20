@@ -74,16 +74,28 @@ update msg model =
                     { apiHost = "http://localhost:9300"
                     , headers = []
                     }
+
+                _ = Debug.log "SignWaiverClicked" ("Submitting form for slug: " ++ model.slug)
+                _ = Debug.log "WaiverForm" waiverForm
             in
             ( { model | isSubmitting = True, error = Nothing }
             , createSignatureRequest model.slug waiverForm httpParams
             )
 
         SignatureResponse result ->
+            let
+                _ = Debug.log "SignatureResponse" result
+            in
             case result of
                 Ok signature ->
+                    let
+                        _ = Debug.log "Signature received" signature
+                    in
                     case signature.signnowUrl of
                         Just url ->
+                            let
+                                _ = Debug.log "Redirecting to" url
+                            in
                             ( { model | isSubmitting = False }
                             , redirectToExternalUrl url
                             )
@@ -94,6 +106,9 @@ update msg model =
                             )
 
                 Err error ->
+                    let
+                        _ = Debug.log "API Error" error
+                    in
                     ( { model | isSubmitting = False, error = Just (apiErrorToString error) }
                     , Cmd.none
                     )
@@ -101,9 +116,14 @@ update msg model =
 
 createSignatureRequest : String -> WaiverForm -> Api.HttpRequestParams -> Cmd Msg
 createSignatureRequest slug waiverForm params =
+    let
+        url = params.apiHost ++ "/projects/" ++ slug ++ "/signatures"
+        _ = Debug.log "Making HTTP request to" url
+        _ = Debug.log "Request body" waiverForm
+    in
     Http.request
         { method = "POST"
-        , url = params.apiHost ++ "/projects/" ++ slug ++ "/signatures"
+        , url = url
         , expect = Generated.ApiRequest.expectJson SignatureResponse Api.signatureDecoder
         , headers = params.headers
         , timeout = Nothing

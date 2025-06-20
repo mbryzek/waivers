@@ -57,7 +57,7 @@ cd waivers-postgresql
 cd waivers
 sbt run
 ```
-Backend will be available at http://localhost:9000
+Backend will be available at http://localhost:9300
 
 ### Frontend Setup
 ```bash
@@ -110,7 +110,7 @@ SMTP_USER=your_smtp_user
 SMTP_PASSWORD=your_smtp_password
 
 # Application
-APP_BASE_URL=http://localhost:9000
+APP_BASE_URL=http://localhost:9300
 ```
 
 ## API Endpoints

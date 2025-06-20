@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a waivers application with the following components:
 
-- **backend/** - Scala Play Framework backend API
-- **waivers-ui/** - Frontend UI (TBD)
+- **backend/** - Scala Play Framework backend API (port 9300)
+- **waivers-ui/** - Elm frontend with Tailwind CSS (port 8080/8081)  
 - **waivers-postgresql/** - Database schema and migration scripts
 - **dao/** - API Builder DAO specifications and generated files
 
@@ -166,3 +166,232 @@ This waivers application manages:
 - **Signature Templates/Requests**: Integration with external signature providers (HelloSign, DocuSign, etc.)
 
 The application supports both simple form-based signatures and integration with external e-signature providers for more formal document signing workflows.
+
+## Frontend Development (waivers-ui/)
+
+### Elm Application Architecture
+The frontend is built with Elm 0.19.1 following patterns established in acumen-ui:
+
+**Project Structure:**
+```
+waivers-ui/
+├── src/
+│   ├── Main.elm                    # Application entry point with routing
+│   ├── Route.elm                   # URL routing system  
+│   ├── Ports.elm                   # JavaScript interop
+│   ├── ValidationError.elm         # Validation error handling
+│   ├── Generated/                  # API Builder generated clients
+│   │   ├── ApiRequest.elm         # HTTP request handling
+│   │   ├── IoBryzekWaiversApi.elm # Main API client
+│   │   ├── IoBryzekWaiversAdmin.elm # Admin API client
+│   │   └── IoBryzekWaiversError.elm # Error models
+│   ├── Page/                       # Page modules with TEA pattern
+│   │   ├── Index.elm              # Landing page
+│   │   ├── Waiver.elm             # Waiver signing form
+│   │   └── Admin.elm              # Admin dashboard
+│   ├── Templates/                  # Reusable UI components
+│   │   ├── Shell.elm              # Page layout and navigation
+│   │   └── Forms.elm              # Form input components
+│   └── Util/                       # Utility modules
+├── elm.json                        # Elm dependencies
+├── package.json                    # Node/npm dependencies  
+├── tailwind.config.js              # Tailwind CSS configuration
+├── run.sh                          # Development server (elm-live)
+├── run-tailwind.sh                # CSS compilation
+└── review.sh                       # Code quality (elm-review)
+```
+
+### Development Workflow
+
+#### Frontend Development Commands:
+```bash
+# Start development server (port 8080/8081)
+./run.sh
+
+# Compile Tailwind CSS (separate terminal)
+./run-tailwind.sh  
+
+# Run code quality checks
+./review.sh
+
+# Generate API clients from backend specs
+apibuilder update
+```
+
+#### Backend Integration:
+- **API Host**: `http://localhost:9300` (configurable in Page.Waiver)
+- **CORS**: Backend configured to allow requests from frontend ports
+- **API Builder**: Type-safe API clients generated from JSON specifications
+
+### Key Implementation Patterns
+
+#### API Integration:
+```elm
+-- Custom API request for correct URL structure
+createSignatureRequest : String -> WaiverForm -> Api.HttpRequestParams -> Cmd Msg
+createSignatureRequest slug waiverForm params =
+    Http.request
+        { method = "POST"
+        , url = params.apiHost ++ "/projects/" ++ slug ++ "/signatures"
+        , expect = Generated.ApiRequest.expectJson SignatureResponse Api.signatureDecoder
+        , headers = params.headers
+        , timeout = Nothing
+        , tracker = Nothing
+        , body = Http.jsonBody (Api.waiverFormEncoder waiverForm)
+        }
+```
+
+#### External URL Redirection:
+```elm
+-- Port for HelloSign redirection
+port redirectToExternalUrl : String -> Cmd msg
+
+-- Usage in JavaScript
+app.ports.redirectToExternalUrl.subscribe(function(url) {
+  window.location.href = url;
+});
+```
+
+#### Form Validation:
+```elm
+-- Client-side validation with real-time feedback
+let
+    isValid = not (String.isEmpty model.firstName || String.isEmpty model.lastName || String.isEmpty model.email)
+    buttonText = 
+        if model.isSubmitting then 
+            "Processing..." 
+        else if not isValid then
+            "Please fill required fields"
+        else 
+            "Sign Waiver"
+```
+
+#### Error Handling:
+```elm
+-- Type-safe API error handling
+apiErrorToString : ApiError -> String
+apiErrorToString error =
+    case error of
+        Generated.ApiRequest.ApiErrorSystem msg ->
+            "System error: " ++ msg
+        Generated.ApiRequest.ApiErrorValidation errors ->
+            "Validation errors: " ++ String.join ", " (List.map .message errors)
+        -- ... other error cases
+```
+
+### JSON Field Mapping Issues
+
+**Critical Learning**: API Builder generates snake_case JSON but Elm expects camelCase.
+
+#### Backend Controller Fix:
+```scala
+// Use fully qualified API model types to get proper JSON readers
+form <- request.body.validate[apiModels.WaiverForm].asEither.leftMap(errors => 
+  List(GenericError("validation_failed", "Invalid form data: " + JsError.toJson(errors)))
+)
+
+// Convert API model to internal model
+private def toInternalWaiverForm(apiForm: apiModels.WaiverForm): WaiverForm = {
+  WaiverForm(
+    firstName = apiForm.firstName,
+    lastName = apiForm.lastName, 
+    email = apiForm.email,
+    phone = apiForm.phone
+  )
+}
+```
+
+#### Generated JSON Mapping:
+API Builder automatically handles snake_case ↔ camelCase conversion:
+- **Frontend sends**: `{"first_name": "John", "last_name": "Doe"}`
+- **Backend receives**: `WaiverForm(firstName = "John", lastName = "Doe")`
+- **Key**: Import `io.bryzek.waivers.api.v0.models.json.*` for proper readers
+
+### CORS Configuration
+
+#### Backend CORS Setup:
+```conf
+# application.conf
+play.filters.cors {
+  allowedOrigins = ["http://localhost:3000", "http://localhost:8080", "http://localhost:8081"]
+  allowedHttpMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allowedHttpHeaders = ["Accept", "Content-Type", "Origin", "X-Requested-With"]
+}
+```
+
+#### Frontend Development Ports:
+- **8080**: Standard development port (run.sh default)
+- **8081**: Alternative port for testing/conflicts
+- **IMPORTANT**: Backend CORS must include all frontend ports
+
+### Responsive Design
+
+#### Mobile-First Approach:
+```elm
+-- Tailwind CSS classes for responsive forms
+div [ class "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" ]
+
+-- Responsive grid layouts  
+div [ class "grid md:grid-cols-2 gap-8" ]
+```
+
+#### Form Components:
+```elm
+-- Reusable form input with proper styling
+textInput : { value : String, placeholder : String, onInput : String -> msg } -> Html msg
+textInput { value, placeholder, onInput } =
+    input
+        [ type_ "text"
+        , Attr.value value
+        , Attr.placeholder placeholder
+        , Html.Events.onInput onInput
+        , class "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        ]
+        []
+```
+
+### Testing and Quality
+
+#### Code Quality Tools:
+- **elm-review**: Configured with comprehensive rule set
+- **Tailwind CSS**: Consistent styling with utility classes
+- **elm-live**: Hot reloading during development
+
+#### API Builder Integration:
+- **Type Safety**: Generated Elm types from backend specifications
+- **Automatic Updates**: `apibuilder update` regenerates clients
+- **Error Models**: Shared error handling between frontend/backend
+
+### User Experience Flow
+
+#### Waiver Signing Process:
+1. **User visits**: `/waiver/{project-slug}`
+2. **Form validation**: Real-time validation with disabled submit
+3. **API request**: POST to `/projects/{slug}/signatures`
+4. **Backend processing**: Creates user, signature, HelloSign request
+5. **URL extraction**: Gets `signnowUrl` from response
+6. **External redirect**: Browser navigates to HelloSign
+7. **Completion**: User signs and receives confirmation
+
+#### Error States:
+- **Network errors**: User-friendly error messages
+- **Validation errors**: Field-level feedback
+- **API errors**: Formatted error display
+- **Loading states**: Button text changes and disabled state
+
+### Dependencies and Tools
+
+#### Required for Development:
+- **Elm 0.19.1**: Core language and compiler
+- **elm-live**: Development server with hot reloading
+- **Node.js/npm**: For Tailwind CSS and elm-review
+- **Tailwind CSS**: Utility-first CSS framework
+- **API Builder CLI**: For client code generation
+
+#### Build Process:
+1. **Elm compilation**: `elm-live src/Main.elm --output=elm.js`
+2. **CSS processing**: `tailwindcss -i ./input.css -o ./style.css`
+3. **API generation**: `apibuilder update` (when specs change)
+4. **Code review**: `elm-review --fix` for quality checks
+
+This frontend provides a complete, production-ready waiver signing experience with proper error handling, responsive design, and integration with external signature providers.

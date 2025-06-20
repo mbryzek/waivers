@@ -1,6 +1,6 @@
 package services
 
-import db.generated.{ProjectsDao, Project => GeneratedProject, ProjectForm => GeneratedProjectForm}
+import db.generated.{ProjectsDao, WaiversDao, Project => GeneratedProject, ProjectForm => GeneratedProjectForm, WaiverForm => GeneratedWaiverForm}
 import models.internal.Project
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,7 +9,8 @@ import org.joda.time.DateTime
 
 @Singleton
 class ProjectService @Inject()(
-  projectsDao: ProjectsDao
+  projectsDao: ProjectsDao,
+  waiversDao: WaiversDao
 )(implicit ec: ExecutionContext) {
 
   // Conversion methods between internal and generated models
@@ -29,7 +30,7 @@ class ProjectService @Inject()(
 
   def create(name: String, slug: String, description: Option[String], waiverTemplate: String, isActive: Boolean = true): Future[Project] = Future {
     val projectId = s"prj-${UUID.randomUUID().toString.replace("-", "")}"
-    val form = GeneratedProjectForm(
+    val projectForm = GeneratedProjectForm(
       id = projectId,
       name = name,
       slug = slug,
@@ -38,7 +39,21 @@ class ProjectService @Inject()(
       isActive = isActive
     )
     
-    projectsDao.insert("system", form) // TODO: Get proper user context
+    // Insert the project
+    projectsDao.insert("system", projectForm) // TODO: Get proper user context
+    
+    // Create a default waiver for the project
+    val waiverId = s"wvr-${UUID.randomUUID().toString.replace("-", "")}"
+    val waiverForm = GeneratedWaiverForm(
+      id = waiverId,
+      projectId = projectId,
+      version = 1,
+      title = s"$name Waiver",
+      content = waiverTemplate,
+      isCurrent = true
+    )
+    
+    waiversDao.insert("system", waiverForm) // TODO: Get proper user context
     
     // Return the created project
     projectsDao.findById(projectId).map(toInternal).getOrElse(
