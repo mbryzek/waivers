@@ -5552,6 +5552,9 @@ var $author$project$Route$RouteAdminProjectDetail = function (a) {
 var $author$project$Route$RouteAdminProjects = {$: 'RouteAdminProjects'};
 var $author$project$Route$RouteAdminSignatures = {$: 'RouteAdminSignatures'};
 var $author$project$Route$RouteHome = {$: 'RouteHome'};
+var $author$project$Route$RouteSign = function (a) {
+	return {$: 'RouteSign', a: a};
+};
 var $author$project$Route$RouteSignatureStatus = function (a) {
 	return {$: 'RouteSignatureStatus', a: a};
 };
@@ -5712,6 +5715,13 @@ var $author$project$Route$matchRoute = $elm$url$Url$Parser$oneOf(
 			A2(
 				$elm$url$Url$Parser$slash,
 				$elm$url$Url$Parser$s('waiver'),
+				$elm$url$Url$Parser$string)),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$RouteSign,
+			A2(
+				$elm$url$Url$Parser$slash,
+				$elm$url$Url$Parser$s('sign'),
 				$elm$url$Url$Parser$string)),
 			A2(
 			$elm$url$Url$Parser$map,
@@ -6382,6 +6392,82 @@ var $elm$url$Url$Parser$parse = F2(
 var $author$project$Route$fromUrl = function (url) {
 	return A2($elm$url$Url$Parser$parse, $author$project$Route$matchRoute, url);
 };
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Page$Sign$init = F2(
+	function (signatureId, url) {
+		var pdfUrl = A2(
+			$elm$core$Maybe$withDefault,
+			$elm$core$Maybe$Nothing,
+			A2(
+				$elm$core$Maybe$map,
+				function (queryString) {
+					return $elm$core$List$head(
+						A2(
+							$elm$core$List$filterMap,
+							function (param) {
+								var _v0 = A2($elm$core$String$split, '=', param);
+								if (((_v0.b && (_v0.a === 'pdf')) && _v0.b.b) && (!_v0.b.b.b)) {
+									var _v1 = _v0.b;
+									var encodedUrl = _v1.a;
+									return $elm$core$Maybe$Just(
+										A2(
+											$elm$core$Maybe$withDefault,
+											encodedUrl,
+											$elm$url$Url$percentDecode(encodedUrl)));
+								} else {
+									return $elm$core$Maybe$Nothing;
+								}
+							},
+							A2($elm$core$String$split, '&', queryString)));
+				},
+				url.query));
+		return {error: $elm$core$Maybe$Nothing, isSubmitting: false, pdfUrl: pdfUrl, signatureData: '', signatureId: signatureId, success: false};
+	});
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Page$Waiver$init = function (slug) {
 	return _Utils_Tuple2(
@@ -6499,19 +6585,35 @@ var $author$project$Main$init = F3(
 		}();
 		var pageWaiverModel = _v0.a;
 		var pageWaiverCmd = _v0.b;
+		var _v3 = function () {
+			if ((route.$ === 'Just') && (route.a.$ === 'RouteSign')) {
+				var signatureId = route.a.a;
+				var signModel = A2($author$project$Page$Sign$init, signatureId, url);
+				return _Utils_Tuple2(
+					$elm$core$Maybe$Just(signModel),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				return _Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Platform$Cmd$none);
+			}
+		}();
+		var pageSignModel = _v3.a;
+		var pageSignCmd = _v3.b;
 		var appModel = $author$project$Main$Model(
-			{currentYear: $elm$core$Maybe$Nothing, key: key, pageWaiver: pageWaiverModel, route: route, url: url, version: flags.version});
+			{currentYear: $elm$core$Maybe$Nothing, key: key, pageSign: pageSignModel, pageWaiver: pageWaiverModel, route: route, url: url, version: flags.version});
 		return _Utils_Tuple2(
 			appModel,
 			$elm$core$Platform$Cmd$batch(
 				_List_fromArray(
-					[pageWaiverCmd, getCurrentYearCmd])));
+					[pageWaiverCmd, pageSignCmd, getCurrentYearCmd])));
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
+};
+var $author$project$Main$PageSignMsg = function (a) {
+	return {$: 'PageSignMsg', a: a};
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
@@ -6559,211 +6661,10 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
-var $author$project$Page$Waiver$apiErrorToString = function (error) {
-	switch (error.$) {
-		case 'ApiErrorSystem':
-			var msg = error.a;
-			return 'System error: ' + msg;
-		case 'ApiErrorUnsupportedStatusCode':
-			var code = error.a;
-			return 'Server error (code ' + ($elm$core$String$fromInt(code) + ')');
-		case 'ApiErrorJsonParse':
-			var msg = error.a;
-			return 'Invalid response format: ' + msg;
-		case 'ApiErrorNotFound':
-			return 'Resource not found';
-		case 'ApiErrorNotAuthorized':
-			return 'You are not authorized to perform this action';
-		default:
-			var errors = error.a;
-			return 'Validation errors: ' + A2(
-				$elm$core$String$join,
-				', ',
-				A2(
-					$elm$core$List$map,
-					function ($) {
-						return $.message;
-					},
-					errors));
-	}
-};
-var $author$project$Page$Waiver$SignatureResponse = function (a) {
-	return {$: 'SignatureResponse', a: a};
-};
-var $author$project$Generated$ApiRequest$ApiErrorJsonParse = function (a) {
-	return {$: 'ApiErrorJsonParse', a: a};
+var $author$project$Page$Sign$SignatureSubmitted = function (a) {
+	return {$: 'SignatureSubmitted', a: a};
 };
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
-var $author$project$Generated$ApiRequest$ApiErrorNotAuthorized = {$: 'ApiErrorNotAuthorized'};
-var $author$project$Generated$ApiRequest$ApiErrorNotFound = {$: 'ApiErrorNotFound'};
-var $author$project$Generated$ApiRequest$ApiErrorSystem = function (a) {
-	return {$: 'ApiErrorSystem', a: a};
-};
-var $author$project$Generated$ApiRequest$ApiErrorUnsupportedStatusCode = function (a) {
-	return {$: 'ApiErrorUnsupportedStatusCode', a: a};
-};
-var $author$project$Generated$ApiRequest$ApiErrorValidation = function (a) {
-	return {$: 'ApiErrorValidation', a: a};
-};
-var $elm$core$String$append = _String_append;
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$ValidationError$ValidationError = F2(
-	function (message, field) {
-		return {field: field, message: message};
-	});
-var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
-};
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder = F3(
-	function (path, valDecoder, fallback) {
-		var nullOr = function (decoder) {
-			return $elm$json$Json$Decode$oneOf(
-				_List_fromArray(
-					[
-						decoder,
-						$elm$json$Json$Decode$null(fallback)
-					]));
-		};
-		var handleResult = function (input) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$at, path, $elm$json$Json$Decode$value),
-				input);
-			if (_v0.$ === 'Ok') {
-				var rawValue = _v0.a;
-				var _v1 = A2(
-					$elm$json$Json$Decode$decodeValue,
-					nullOr(valDecoder),
-					rawValue);
-				if (_v1.$ === 'Ok') {
-					var finalResult = _v1.a;
-					return $elm$json$Json$Decode$succeed(finalResult);
-				} else {
-					return A2(
-						$elm$json$Json$Decode$at,
-						path,
-						nullOr(valDecoder));
-				}
-			} else {
-				return $elm$json$Json$Decode$succeed(fallback);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, handleResult, $elm$json$Json$Decode$value);
-	});
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
-	function (key, valDecoder, fallback, decoder) {
-		return A2(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A3(
-				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder,
-				_List_fromArray(
-					[key]),
-				valDecoder,
-				fallback),
-			decoder);
-	});
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
-	function (key, valDecoder, decoder) {
-		return A2(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A2($elm$json$Json$Decode$field, key, valDecoder),
-			decoder);
-	});
-var $author$project$ValidationError$validationErrorDecoder = A4(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'field',
-	$elm$json$Json$Decode$nullable($elm$json$Json$Decode$string),
-	$elm$core$Maybe$Nothing,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'message',
-		$elm$json$Json$Decode$string,
-		$elm$json$Json$Decode$succeed($author$project$ValidationError$ValidationError)));
-var $author$project$ValidationError$validationErrorsDecoder = $elm$json$Json$Decode$list($author$project$ValidationError$validationErrorDecoder);
-var $author$project$Generated$ApiRequest$mapApiResponse = F2(
-	function (httpResponse, f) {
-		switch (httpResponse.$) {
-			case 'BadUrl_':
-				var url = httpResponse.a;
-				return $elm$core$Result$Err(
-					$author$project$Generated$ApiRequest$ApiErrorSystem(
-						A2($elm$core$String$append, 'Bad URL: ', url)));
-			case 'Timeout_':
-				return $elm$core$Result$Err(
-					$author$project$Generated$ApiRequest$ApiErrorSystem('Timeout'));
-			case 'NetworkError_':
-				return $elm$core$Result$Err(
-					$author$project$Generated$ApiRequest$ApiErrorSystem('NetworkError'));
-			case 'BadStatus_':
-				var metadata = httpResponse.a;
-				var body = httpResponse.b;
-				var _v1 = metadata.statusCode;
-				switch (_v1) {
-					case 401:
-						return $elm$core$Result$Err($author$project$Generated$ApiRequest$ApiErrorNotAuthorized);
-					case 404:
-						return $elm$core$Result$Err($author$project$Generated$ApiRequest$ApiErrorNotFound);
-					case 422:
-						var _v2 = A2($elm$json$Json$Decode$decodeString, $author$project$ValidationError$validationErrorsDecoder, body);
-						if (_v2.$ === 'Ok') {
-							var errors = _v2.a;
-							return $elm$core$Result$Err(
-								$author$project$Generated$ApiRequest$ApiErrorValidation(errors));
-						} else {
-							var e = _v2.a;
-							return $elm$core$Result$Err(
-								$author$project$Generated$ApiRequest$ApiErrorSystem(
-									'422 - unable to parse body as validation error: ' + $elm$json$Json$Decode$errorToString(e)));
-						}
-					default:
-						var code = _v1;
-						return $elm$core$Result$Err(
-							$author$project$Generated$ApiRequest$ApiErrorUnsupportedStatusCode(code));
-				}
-			default:
-				var body = httpResponse.b;
-				var _v3 = f(body);
-				if (_v3.$ === 'Ok') {
-					var obj = _v3.a;
-					return $elm$core$Result$Ok(obj);
-				} else {
-					var e = _v3.a;
-					return $elm$core$Result$Err(e);
-				}
-		}
-	});
-var $author$project$Generated$ApiRequest$convertJson = F2(
-	function (decoder, httpResponse) {
-		return A2(
-			$author$project$Generated$ApiRequest$mapApiResponse,
-			httpResponse,
-			function (body) {
-				var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, body);
-				if (_v0.$ === 'Ok') {
-					var obj = _v0.a;
-					return $elm$core$Result$Ok(obj);
-				} else {
-					var e = _v0.a;
-					return $elm$core$Result$Err(
-						$author$project$Generated$ApiRequest$ApiErrorJsonParse(
-							$elm$json$Json$Decode$errorToString(e)));
-				}
-			});
-	});
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -6804,20 +6705,88 @@ var $elm$http$Http$expectStringResponse = F2(
 			$elm$core$Basics$identity,
 			A2($elm$core$Basics$composeR, toResult, toMsg));
 	});
-var $author$project$Generated$ApiRequest$expectJson = F2(
-	function (msg, decoder) {
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
 		return A2(
 			$elm$http$Http$expectStringResponse,
-			msg,
-			$author$project$Generated$ApiRequest$convertJson(decoder));
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
 	});
+var $elm$http$Http$Header = F2(
+	function (a, b) {
+		return {$: 'Header', a: a, b: b};
+	});
+var $elm$http$Http$header = $elm$http$Http$Header;
 var $elm$http$Http$jsonBody = function (value) {
 	return A2(
 		_Http_pair,
 		'application/json',
 		A2($elm$json$Json$Encode$encode, 0, value));
 };
-var $elm$core$Debug$log = _Debug_log;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -6898,24 +6867,6 @@ var $elm$http$Http$onEffects = F4(
 					A2($elm$http$Http$State, reqs, subs));
 			},
 			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
 	});
 var $elm$http$Http$maybeSend = F4(
 	function (router, desiredTracker, progress, _v0) {
@@ -7351,6 +7302,7 @@ var $elm$parser$Parser$Done = function (a) {
 var $elm$parser$Parser$Loop = function (a) {
 	return {$: 'Loop', a: a};
 };
+var $elm$core$String$append = _String_append;
 var $elm$parser$Parser$UnexpectedChar = {$: 'UnexpectedChar'};
 var $elm$parser$Parser$Advanced$chompIf = F2(
 	function (isGood, expecting) {
@@ -7832,6 +7784,78 @@ var $rtfeldman$elm_iso8601_date_strings$Iso8601$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder = F3(
+	function (path, valDecoder, fallback) {
+		var nullOr = function (decoder) {
+			return $elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						decoder,
+						$elm$json$Json$Decode$null(fallback)
+					]));
+		};
+		var handleResult = function (input) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$at, path, $elm$json$Json$Decode$value),
+				input);
+			if (_v0.$ === 'Ok') {
+				var rawValue = _v0.a;
+				var _v1 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					nullOr(valDecoder),
+					rawValue);
+				if (_v1.$ === 'Ok') {
+					var finalResult = _v1.a;
+					return $elm$json$Json$Decode$succeed(finalResult);
+				} else {
+					return A2(
+						$elm$json$Json$Decode$at,
+						path,
+						nullOr(valDecoder));
+				}
+			} else {
+				return $elm$json$Json$Decode$succeed(fallback);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, handleResult, $elm$json$Json$Decode$value);
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
+	function (key, valDecoder, fallback, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder,
+				_List_fromArray(
+					[key]),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2($elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
 var $author$project$Generated$IoBryzekWaiversApi$SignatureStatusCancelled = {$: 'SignatureStatusCancelled'};
 var $author$project$Generated$IoBryzekWaiversApi$SignatureStatusExpired = {$: 'SignatureStatusExpired'};
 var $author$project$Generated$IoBryzekWaiversApi$SignatureStatusPending = {$: 'SignatureStatusPending'};
@@ -7925,6 +7949,232 @@ var $author$project$Generated$IoBryzekWaiversApi$signatureDecoder = A4(
 						'id',
 						$elm$json$Json$Decode$string,
 						$elm$json$Json$Decode$succeed($author$project$Generated$IoBryzekWaiversApi$Signature)))))));
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Page$Sign$submitSignature = F2(
+	function (signatureId, signatureData) {
+		var body = $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'signature_data',
+					$elm$json$Json$Encode$string(signatureData))
+				]));
+		return $elm$http$Http$request(
+			{
+				body: $elm$http$Http$jsonBody(body),
+				expect: A2($elm$http$Http$expectJson, $author$project$Page$Sign$SignatureSubmitted, $author$project$Generated$IoBryzekWaiversApi$signatureDecoder),
+				headers: _List_fromArray(
+					[
+						A2($elm$http$Http$header, 'Content-Type', 'application/json')
+					]),
+				method: 'POST',
+				timeout: $elm$core$Maybe$Nothing,
+				tracker: $elm$core$Maybe$Nothing,
+				url: 'http://localhost:9300/signatures/' + (signatureId + '/complete')
+			});
+	});
+var $elm$core$String$trim = _String_trim;
+var $author$project$Page$Sign$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'SignatureDataChanged':
+				var data = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{signatureData: data}),
+					$elm$core$Platform$Cmd$none);
+			case 'SubmitSignature':
+				return $elm$core$String$isEmpty(
+					$elm$core$String$trim(model.signatureData)) ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							error: $elm$core$Maybe$Just('Please enter your signature')
+						}),
+					$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{error: $elm$core$Maybe$Nothing, isSubmitting: true}),
+					A2($author$project$Page$Sign$submitSignature, model.signatureId, model.signatureData));
+			default:
+				if (msg.a.$ === 'Ok') {
+					var signature = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{isSubmitting: false, success: true}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var error = msg.a.a;
+					var errorMessage = function () {
+						_v1$2:
+						while (true) {
+							if (error.$ === 'BadStatus') {
+								switch (error.a) {
+									case 404:
+										return 'Signature not found';
+									case 400:
+										return 'Invalid signature data';
+									default:
+										break _v1$2;
+								}
+							} else {
+								break _v1$2;
+							}
+						}
+						return 'Failed to submit signature';
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								error: $elm$core$Maybe$Just(errorMessage),
+								isSubmitting: false
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+		}
+	});
+var $author$project$Page$Waiver$apiErrorToString = function (error) {
+	switch (error.$) {
+		case 'ApiErrorSystem':
+			var msg = error.a;
+			return 'System error: ' + msg;
+		case 'ApiErrorUnsupportedStatusCode':
+			var code = error.a;
+			return 'Server error (code ' + ($elm$core$String$fromInt(code) + ')');
+		case 'ApiErrorJsonParse':
+			var msg = error.a;
+			return 'Invalid response format: ' + msg;
+		case 'ApiErrorNotFound':
+			return 'Resource not found';
+		case 'ApiErrorNotAuthorized':
+			return 'You are not authorized to perform this action';
+		default:
+			var errors = error.a;
+			return 'Validation errors: ' + A2(
+				$elm$core$String$join,
+				', ',
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.message;
+					},
+					errors));
+	}
+};
+var $author$project$Page$Waiver$SignatureResponse = function (a) {
+	return {$: 'SignatureResponse', a: a};
+};
+var $author$project$Generated$ApiRequest$ApiErrorJsonParse = function (a) {
+	return {$: 'ApiErrorJsonParse', a: a};
+};
+var $author$project$Generated$ApiRequest$ApiErrorNotAuthorized = {$: 'ApiErrorNotAuthorized'};
+var $author$project$Generated$ApiRequest$ApiErrorNotFound = {$: 'ApiErrorNotFound'};
+var $author$project$Generated$ApiRequest$ApiErrorSystem = function (a) {
+	return {$: 'ApiErrorSystem', a: a};
+};
+var $author$project$Generated$ApiRequest$ApiErrorUnsupportedStatusCode = function (a) {
+	return {$: 'ApiErrorUnsupportedStatusCode', a: a};
+};
+var $author$project$Generated$ApiRequest$ApiErrorValidation = function (a) {
+	return {$: 'ApiErrorValidation', a: a};
+};
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$ValidationError$ValidationError = F2(
+	function (message, field) {
+		return {field: field, message: message};
+	});
+var $author$project$ValidationError$validationErrorDecoder = A4(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'field',
+	$elm$json$Json$Decode$nullable($elm$json$Json$Decode$string),
+	$elm$core$Maybe$Nothing,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'message',
+		$elm$json$Json$Decode$string,
+		$elm$json$Json$Decode$succeed($author$project$ValidationError$ValidationError)));
+var $author$project$ValidationError$validationErrorsDecoder = $elm$json$Json$Decode$list($author$project$ValidationError$validationErrorDecoder);
+var $author$project$Generated$ApiRequest$mapApiResponse = F2(
+	function (httpResponse, f) {
+		switch (httpResponse.$) {
+			case 'BadUrl_':
+				var url = httpResponse.a;
+				return $elm$core$Result$Err(
+					$author$project$Generated$ApiRequest$ApiErrorSystem(
+						A2($elm$core$String$append, 'Bad URL: ', url)));
+			case 'Timeout_':
+				return $elm$core$Result$Err(
+					$author$project$Generated$ApiRequest$ApiErrorSystem('Timeout'));
+			case 'NetworkError_':
+				return $elm$core$Result$Err(
+					$author$project$Generated$ApiRequest$ApiErrorSystem('NetworkError'));
+			case 'BadStatus_':
+				var metadata = httpResponse.a;
+				var body = httpResponse.b;
+				var _v1 = metadata.statusCode;
+				switch (_v1) {
+					case 401:
+						return $elm$core$Result$Err($author$project$Generated$ApiRequest$ApiErrorNotAuthorized);
+					case 404:
+						return $elm$core$Result$Err($author$project$Generated$ApiRequest$ApiErrorNotFound);
+					case 422:
+						var _v2 = A2($elm$json$Json$Decode$decodeString, $author$project$ValidationError$validationErrorsDecoder, body);
+						if (_v2.$ === 'Ok') {
+							var errors = _v2.a;
+							return $elm$core$Result$Err(
+								$author$project$Generated$ApiRequest$ApiErrorValidation(errors));
+						} else {
+							var e = _v2.a;
+							return $elm$core$Result$Err(
+								$author$project$Generated$ApiRequest$ApiErrorSystem(
+									'422 - unable to parse body as validation error: ' + $elm$json$Json$Decode$errorToString(e)));
+						}
+					default:
+						var code = _v1;
+						return $elm$core$Result$Err(
+							$author$project$Generated$ApiRequest$ApiErrorUnsupportedStatusCode(code));
+				}
+			default:
+				var body = httpResponse.b;
+				var _v3 = f(body);
+				if (_v3.$ === 'Ok') {
+					var obj = _v3.a;
+					return $elm$core$Result$Ok(obj);
+				} else {
+					var e = _v3.a;
+					return $elm$core$Result$Err(e);
+				}
+		}
+	});
+var $author$project$Generated$ApiRequest$convertJson = F2(
+	function (decoder, httpResponse) {
+		return A2(
+			$author$project$Generated$ApiRequest$mapApiResponse,
+			httpResponse,
+			function (body) {
+				var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, body);
+				if (_v0.$ === 'Ok') {
+					var obj = _v0.a;
+					return $elm$core$Result$Ok(obj);
+				} else {
+					var e = _v0.a;
+					return $elm$core$Result$Err(
+						$author$project$Generated$ApiRequest$ApiErrorJsonParse(
+							$elm$json$Json$Decode$errorToString(e)));
+				}
+			});
+	});
+var $author$project$Generated$ApiRequest$expectJson = F2(
+	function (msg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			msg,
+			$author$project$Generated$ApiRequest$convertJson(decoder));
+	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Generated$IoBryzekWaiversApi$encodeOptional = F2(
 	function (encoder, value) {
@@ -7935,20 +8185,6 @@ var $author$project$Generated$IoBryzekWaiversApi$encodeOptional = F2(
 			return $elm$json$Json$Encode$null;
 		}
 	});
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Generated$IoBryzekWaiversApi$waiverFormEncoder = function (instance) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -8109,20 +8345,35 @@ var $author$project$Main$update = F2(
 				}();
 				var pageWaiverModel = _v3.a;
 				var pageWaiverCmd = _v3.b;
+				var _v6 = function () {
+					if ((route.$ === 'Just') && (route.a.$ === 'RouteSign')) {
+						var signatureId = route.a.a;
+						var signModel = A2($author$project$Page$Sign$init, signatureId, url);
+						return _Utils_Tuple2(
+							$elm$core$Maybe$Just(signModel),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Platform$Cmd$none);
+					}
+				}();
+				var pageSignModel = _v6.a;
+				var pageSignCmd = _v6.b;
 				var updatedModel = _Utils_update(
 					model,
-					{pageWaiver: pageWaiverModel, route: route, url: url});
+					{pageSign: pageSignModel, pageWaiver: pageWaiverModel, route: route, url: url});
 				return _Utils_Tuple2(
 					$author$project$Main$Model(updatedModel),
-					pageWaiverCmd);
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[pageWaiverCmd, pageSignCmd])));
 			case 'PageWaiverMsg':
 				var pageMsg = msg.a;
-				var _v6 = model.pageWaiver;
-				if (_v6.$ === 'Just') {
-					var pageModel = _v6.a;
-					var _v7 = A2($author$project$Page$Waiver$update, pageMsg, pageModel);
-					var newPageModel = _v7.a;
-					var pageCmd = _v7.b;
+				var _v8 = model.pageWaiver;
+				if (_v8.$ === 'Just') {
+					var pageModel = _v8.a;
+					var _v9 = A2($author$project$Page$Waiver$update, pageMsg, pageModel);
+					var newPageModel = _v9.a;
+					var pageCmd = _v9.b;
 					return _Utils_Tuple2(
 						$author$project$Main$Model(
 							_Utils_update(
@@ -8131,6 +8382,27 @@ var $author$project$Main$update = F2(
 									pageWaiver: $elm$core$Maybe$Just(newPageModel)
 								})),
 						A2($elm$core$Platform$Cmd$map, $author$project$Main$PageWaiverMsg, pageCmd));
+				} else {
+					return _Utils_Tuple2(
+						$author$project$Main$Model(model),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'PageSignMsg':
+				var pageMsg = msg.a;
+				var _v10 = model.pageSign;
+				if (_v10.$ === 'Just') {
+					var pageModel = _v10.a;
+					var _v11 = A2($author$project$Page$Sign$update, pageMsg, pageModel);
+					var newPageModel = _v11.a;
+					var pageCmd = _v11.b;
+					return _Utils_Tuple2(
+						$author$project$Main$Model(
+							_Utils_update(
+								model,
+								{
+									pageSign: $elm$core$Maybe$Just(newPageModel)
+								})),
+						A2($elm$core$Platform$Cmd$map, $author$project$Main$PageSignMsg, pageCmd));
 				} else {
 					return _Utils_Tuple2(
 						$author$project$Main$Model(model),
@@ -8595,19 +8867,10 @@ var $author$project$Page$Index$view = function (currentYear) {
 			title: 'Welcome to Waivers'
 		});
 };
-var $author$project$Page$Waiver$EmailChanged = function (a) {
-	return {$: 'EmailChanged', a: a};
+var $author$project$Page$Sign$SignatureDataChanged = function (a) {
+	return {$: 'SignatureDataChanged', a: a};
 };
-var $author$project$Page$Waiver$FirstNameChanged = function (a) {
-	return {$: 'FirstNameChanged', a: a};
-};
-var $author$project$Page$Waiver$LastNameChanged = function (a) {
-	return {$: 'LastNameChanged', a: a};
-};
-var $author$project$Page$Waiver$PhoneChanged = function (a) {
-	return {$: 'PhoneChanged', a: a};
-};
-var $author$project$Page$Waiver$SignWaiverClicked = {$: 'SignWaiverClicked'};
+var $author$project$Page$Sign$SubmitSignature = {$: 'SubmitSignature'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
@@ -8618,31 +8881,12 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
-var $elm$html$Html$form = _VirtualDom_node('form');
+var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$iframe = _VirtualDom_node('iframe');
+var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
-var $author$project$Templates$Forms$formGroup = F2(
-	function (labelText, inputElement) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('mb-4')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$label,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('block text-sm font-medium text-gray-700 mb-2')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(labelText)
-						])),
-					inputElement
-				]));
-	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -8660,29 +8904,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
-	return _Utils_Tuple2(msg, true);
-};
-var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
-	return {$: 'MayPreventDefault', a: a};
-};
-var $elm$html$Html$Events$preventDefaultOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
-	});
-var $elm$html$Html$Events$onSubmit = function (msg) {
-	return A2(
-		$elm$html$Html$Events$preventDefaultOn,
-		'submit',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysPreventDefault,
-			$elm$json$Json$Decode$succeed(msg)));
-};
-var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -8711,8 +8932,377 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Page$Sign$viewSigningForm = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('space-y-6')
+			]),
+		_List_fromArray(
+			[
+				function () {
+				var _v0 = model.pdfUrl;
+				if (_v0.$ === 'Just') {
+					var pdfUrl = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h3,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('text-lg font-medium text-gray-900 mb-4')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Waiver Document')
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('border border-gray-300 rounded-lg overflow-hidden')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$iframe,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$src(pdfUrl),
+												$elm$html$Html$Attributes$class('w-full h-96'),
+												$elm$html$Html$Attributes$title('Waiver Document')
+											]),
+										_List_Nil)
+									]))
+							]));
+				} else {
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('bg-yellow-50 border border-yellow-200 rounded-lg p-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('text-yellow-800')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('PDF document could not be loaded. Please contact support if this issue persists.')
+									]))
+							]));
+				}
+			}(),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text-lg font-medium text-gray-900 mb-4')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Your Signature')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('space-y-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$for('signature'),
+												$elm$html$Html$Attributes$class('block text-sm font-medium text-gray-700')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Type your full name to sign')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$id('signature'),
+												$elm$html$Html$Attributes$class('mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'),
+												$elm$html$Html$Attributes$placeholder('Enter your full name'),
+												$elm$html$Html$Attributes$value(model.signatureData),
+												$elm$html$Html$Events$onInput($author$project$Page$Sign$SignatureDataChanged),
+												$elm$html$Html$Attributes$disabled(model.isSubmitting)
+											]),
+										_List_Nil)
+									])),
+								function () {
+								var _v1 = model.error;
+								if (_v1.$ === 'Just') {
+									var error = _v1.a;
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('text-red-600 text-sm')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(error)
+											]));
+								} else {
+									return $elm$html$Html$text('');
+								}
+							}(),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$type_('button'),
+												$elm$html$Html$Attributes$class('w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'),
+												$elm$html$Html$Events$onClick($author$project$Page$Sign$SubmitSignature),
+												$elm$html$Html$Attributes$disabled(
+												model.isSubmitting || $elm$core$String$isEmpty(
+													$elm$core$String$trim(model.signatureData)))
+											]),
+										_List_fromArray(
+											[
+												model.isSubmitting ? $elm$html$Html$text('Submitting...') : $elm$html$Html$text('Sign Waiver')
+											]))
+									]))
+							]))
+					]))
+			]));
+};
+var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$Attributes$strokeLinecap = _VirtualDom_attribute('stroke-linecap');
+var $elm$svg$Svg$Attributes$strokeLinejoin = _VirtualDom_attribute('stroke-linejoin');
+var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var $author$project$Page$Sign$viewSuccess = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('text-center py-12')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$svg,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('h-6 w-6 text-green-600'),
+							$elm$svg$Svg$Attributes$fill('none'),
+							$elm$svg$Svg$Attributes$viewBox('0 0 24 24'),
+							$elm$svg$Svg$Attributes$stroke('currentColor')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$path,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$strokeLinecap('round'),
+									$elm$svg$Svg$Attributes$strokeLinejoin('round'),
+									$elm$svg$Svg$Attributes$strokeWidth('2'),
+									$elm$svg$Svg$Attributes$d('M5 13l4 4L19 7')
+								]),
+							_List_Nil)
+						]))
+				])),
+			A2(
+			$elm$html$Html$h3,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mt-4 text-lg font-medium text-gray-900')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Waiver Signed Successfully!')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mt-2 text-gray-500')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Thank you for completing your waiver. You will receive a copy via email shortly.')
+				]))
+		]));
+var $author$project$Page$Sign$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('min-h-screen bg-gray-50 py-8')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('max-w-4xl mx-auto px-4 sm:px-6 lg:px-8')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('bg-white rounded-lg shadow-lg overflow-hidden')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('px-6 py-8 border-b border-gray-200')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$h1,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('text-2xl font-bold text-gray-900')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Sign Your Waiver')
+											])),
+										A2(
+										$elm$html$Html$p,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mt-2 text-gray-600')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Please review the document below and provide your signature to complete the waiver.')
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('p-6')
+									]),
+								_List_fromArray(
+									[
+										model.success ? $author$project$Page$Sign$viewSuccess : $author$project$Page$Sign$viewSigningForm(model)
+									]))
+							]))
+					]))
+			]));
+};
+var $author$project$Page$Waiver$EmailChanged = function (a) {
+	return {$: 'EmailChanged', a: a};
+};
+var $author$project$Page$Waiver$FirstNameChanged = function (a) {
+	return {$: 'FirstNameChanged', a: a};
+};
+var $author$project$Page$Waiver$LastNameChanged = function (a) {
+	return {$: 'LastNameChanged', a: a};
+};
+var $author$project$Page$Waiver$PhoneChanged = function (a) {
+	return {$: 'PhoneChanged', a: a};
+};
+var $author$project$Page$Waiver$SignWaiverClicked = {$: 'SignWaiverClicked'};
+var $elm$html$Html$form = _VirtualDom_node('form');
+var $author$project$Templates$Forms$formGroup = F2(
+	function (labelText, inputElement) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mb-4')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$label,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('block text-sm font-medium text-gray-700 mb-2')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(labelText)
+						])),
+					inputElement
+				]));
+	});
+var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 'MayPreventDefault', a: a};
+};
+var $elm$html$Html$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
+var $elm$html$Html$Events$onSubmit = function (msg) {
+	return A2(
+		$elm$html$Html$Events$preventDefaultOn,
+		'submit',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysPreventDefault,
+			$elm$json$Json$Decode$succeed(msg)));
+};
 var $author$project$Templates$Forms$textInput = function (_v0) {
 	var value = _v0.value;
 	var placeholder = _v0.placeholder;
@@ -8892,8 +9482,8 @@ var $author$project$Page$Waiver$view = F2(
 				title: 'Sign Waiver'
 			});
 	});
-var $author$project$Main$viewContent = F3(
-	function (maybeRoute, pageWaiverModel, currentYear) {
+var $author$project$Main$viewContent = F4(
+	function (maybeRoute, pageWaiverModel, pageSignModel, currentYear) {
 		if (maybeRoute.$ === 'Nothing') {
 			return A2(
 				$elm$html$Html$div,
@@ -8936,6 +9526,25 @@ var $author$project$Main$viewContent = F3(
 							$elm$html$Html$map,
 							$author$project$Main$PageWaiverMsg,
 							A2($author$project$Page$Waiver$view, model, currentYear));
+					} else {
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('container mx-auto px-4 py-8')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Loading...')
+								]));
+					}
+				case 'RouteSign':
+					if (pageSignModel.$ === 'Just') {
+						var model = pageSignModel.a;
+						return A2(
+							$elm$html$Html$map,
+							$author$project$Main$PageSignMsg,
+							$author$project$Page$Sign$view(model));
 					} else {
 						return A2(
 							$elm$html$Html$div,
@@ -9040,7 +9649,7 @@ var $author$project$Main$view = function (_v0) {
 	return {
 		body: _List_fromArray(
 			[
-				A3($author$project$Main$viewContent, model.route, model.pageWaiver, model.currentYear)
+				A4($author$project$Main$viewContent, model.route, model.pageWaiver, model.pageSign, model.currentYear)
 			]),
 		title: 'Waivers'
 	};

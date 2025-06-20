@@ -7,6 +7,7 @@ import Url.Parser exposing (..)
 type Route
     = RouteHome
     | RouteWaiver String
+    | RouteSign String
     | RouteAdmin
     | RouteAdminProjects
     | RouteAdminProjectDetail String
@@ -24,6 +25,7 @@ matchRoute =
     oneOf
         [ map RouteHome top
         , map RouteWaiver (s "waiver" </> string)
+        , map RouteSign (s "sign" </> string)
         , map RouteAdmin (s "admin")
         , map RouteAdminProjects (s "admin" </> s "projects")
         , map RouteAdminProjectDetail (s "admin" </> s "projects" </> string)

@@ -6,6 +6,7 @@ import Html as H
 import Html.Attributes as A
 import Page.Admin as PageAdmin
 import Page.Index as PageIndex
+import Page.Sign as PageSign
 import Page.Waiver as PageWaiver
 import Route exposing (Route)
 import Url
@@ -37,6 +38,7 @@ type Model
         , version : String
         , currentYear : Maybe Int
         , pageWaiver : Maybe PageWaiver.Model
+        , pageSign : Maybe PageSign.Model
         }
 
 
@@ -44,6 +46,7 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | PageWaiverMsg PageWaiver.Msg
+    | PageSignMsg PageSign.Msg
     | GotCurrentYear Int
 
 
@@ -65,6 +68,17 @@ init flags url key =
                 _ ->
                     ( Nothing, Cmd.none )
 
+        ( pageSignModel, pageSignCmd ) =
+            case route of
+                Just (Route.RouteSign signatureId) ->
+                    let
+                        signModel = PageSign.init signatureId url
+                    in
+                    ( Just signModel, Cmd.none )
+
+                _ ->
+                    ( Nothing, Cmd.none )
+
         appModel =
             Model
                 { key = key
@@ -73,6 +87,7 @@ init flags url key =
                 , version = flags.version
                 , currentYear = Nothing
                 , pageWaiver = pageWaiverModel
+                , pageSign = pageSignModel
                 }
         
         getCurrentYearCmd =
@@ -80,7 +95,7 @@ init flags url key =
                 (\posix -> GotCurrentYear (Time.toYear Time.utc posix))
                 Time.now
     in
-    ( appModel, Cmd.batch [ pageWaiverCmd, getCurrentYearCmd ] )
+    ( appModel, Cmd.batch [ pageWaiverCmd, pageSignCmd, getCurrentYearCmd ] )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -111,10 +126,21 @@ update msg (Model model) =
                         _ ->
                             ( Nothing, Cmd.none )
 
+                ( pageSignModel, pageSignCmd ) =
+                    case route of
+                        Just (Route.RouteSign signatureId) ->
+                            let
+                                signModel = PageSign.init signatureId url
+                            in
+                            ( Just signModel, Cmd.none )
+
+                        _ ->
+                            ( Nothing, Cmd.none )
+
                 updatedModel =
-                    { model | url = url, route = route, pageWaiver = pageWaiverModel }
+                    { model | url = url, route = route, pageWaiver = pageWaiverModel, pageSign = pageSignModel }
             in
-            ( Model updatedModel, pageWaiverCmd )
+            ( Model updatedModel, Cmd.batch [ pageWaiverCmd, pageSignCmd ] )
 
         PageWaiverMsg pageMsg ->
             case model.pageWaiver of
@@ -124,6 +150,18 @@ update msg (Model model) =
                             PageWaiver.update pageMsg pageModel
                     in
                     ( Model { model | pageWaiver = Just newPageModel }, Cmd.map PageWaiverMsg pageCmd )
+
+                Nothing ->
+                    ( Model model, Cmd.none )
+
+        PageSignMsg pageMsg ->
+            case model.pageSign of
+                Just pageModel ->
+                    let
+                        ( newPageModel, pageCmd ) =
+                            PageSign.update pageMsg pageModel
+                    in
+                    ( Model { model | pageSign = Just newPageModel }, Cmd.map PageSignMsg pageCmd )
 
                 Nothing ->
                     ( Model model, Cmd.none )
@@ -141,13 +179,13 @@ view : Model -> Browser.Document Msg
 view (Model model) =
     { title = "Waivers"
     , body =
-        [ viewContent model.route model.pageWaiver model.currentYear
+        [ viewContent model.route model.pageWaiver model.pageSign model.currentYear
         ]
     }
 
 
-viewContent : Maybe Route -> Maybe PageWaiver.Model -> Maybe Int -> H.Html Msg
-viewContent maybeRoute pageWaiverModel currentYear =
+viewContent : Maybe Route -> Maybe PageWaiver.Model -> Maybe PageSign.Model -> Maybe Int -> H.Html Msg
+viewContent maybeRoute pageWaiverModel pageSignModel currentYear =
     case maybeRoute of
         Nothing ->
             H.div [ A.class "container mx-auto px-4 py-8" ]
@@ -164,6 +202,15 @@ viewContent maybeRoute pageWaiverModel currentYear =
                     case pageWaiverModel of
                         Just model ->
                             H.map PageWaiverMsg (PageWaiver.view model currentYear)
+
+                        Nothing ->
+                            H.div [ A.class "container mx-auto px-4 py-8" ]
+                                [ H.text "Loading..." ]
+
+                Route.RouteSign _ ->
+                    case pageSignModel of
+                        Just model ->
+                            H.map PageSignMsg (PageSign.view model)
 
                         Nothing ->
                             H.div [ A.class "container mx-auto px-4 py-8" ]
