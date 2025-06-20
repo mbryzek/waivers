@@ -126,6 +126,27 @@ class WaiversController @Inject()(
     }
   }
 
+  def completeSignature(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    // Handle signature completion from PDF.co frontend
+    val signatureDataOpt = (request.body \ "signature_data").asOpt[String]
+    
+    signatureDataOpt match {
+      case Some(signatureData) if signatureData.trim.nonEmpty =>
+        // Update signature status to completed
+        // In a real implementation, we would also save the signature data to PDF.co
+        signatureService.findByIdWithRelated(id).flatMap {
+          case Some((signature, user, waiver)) =>
+            // TODO: Update signature status in database
+            // For now, just return success
+            Future.successful(Ok(Json.toJson(toApiSignature(signature, user, waiver))))
+          case None =>
+            Future.successful(NotFound(Json.obj("code" -> "signature_not_found", "message" -> s"Signature with id '$id' not found")))
+        }
+      case _ =>
+        Future.successful(BadRequest(Json.obj("code" -> "invalid_signature_data", "message" -> "Signature data is required")))
+    }
+  }
+
   def signComplete(requestId: String, email: String): Action[AnyContent] = Action { implicit request =>
     // Demo endpoint that simulates successful signature completion
     // In production, this would be handled by HelloSign webhooks

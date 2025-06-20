@@ -16,7 +16,7 @@ class SignatureService @Inject()(
   @unused signatureTemplatesDao: SignatureTemplatesDao,
   @unused signatureRequestsDao: SignatureRequestsDao,
   waiverService: WaiverService,
-  helloSignService: HelloSignService
+  pdfCoService: PdfCoService
 )(implicit ec: ExecutionContext) {
 
   def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[(Signature, User, Waiver)] = {
@@ -32,10 +32,10 @@ class SignatureService @Inject()(
       // Create signature record
       signature <- createSignatureRecord(user, waiver, ipAddress)
       
-      // Create HelloSign signature request
-      signatureRequestId <- helloSignService.createSignatureRequest(signature, user, waiver)
+      // Create PDF.co signature request
+      signatureRequestId <- pdfCoService.createSignatureRequest(signature, user, waiver)
       
-      // Update signature with HelloSign request ID
+      // Update signature with PDF.co request ID
       _ <- updateSignatureWithRequestId(signature.id, signatureRequestId)
       
     } yield (signature, user, waiver)
@@ -155,7 +155,7 @@ class SignatureService @Inject()(
             // Find user to get email for signing URL
             usersDao.findById(signature.userId) match {
               case Some(user) =>
-                helloSignService.getSigningUrl(requestId, user.email)
+                pdfCoService.getSigningUrl(requestId, user.email)
               case None =>
                 Future.successful(None)
             }
