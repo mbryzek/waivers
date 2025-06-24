@@ -1,0 +1,28 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+
+# Public API
+GET     /projects/:slug                 controllers.WaiversController.getProject(slug: String)
+GET     /projects/:slug/waiver          controllers.WaiversController.getCurrentWaiver(slug: String)
+POST    /projects/:slug/signatures      controllers.WaiversController.createSignature(slug: String)
+GET     /signatures/:id                 controllers.WaiversController.getSignature(id: String)
+POST    /signatures/:id/complete        controllers.WaiversController.completeSignature(id: String)
+
+# Admin API
+GET     /admin/projects                 controllers.AdminController.getProjects(limit: Option[Long], offset: Option[Long])
+POST    /admin/projects                 controllers.AdminController.createProject()
+GET     /admin/projects/:id             controllers.AdminController.getProject(id: String)
+PUT     /admin/projects/:id             controllers.AdminController.updateProject(id: String)
+GET     /admin/signatures               controllers.AdminController.getSignatures(project_id: Option[String], status: Option[String], email: Option[String], limit: Option[Long], offset: Option[Long])
+POST    /admin/exports                  controllers.AdminController.exportSignatures()
+
+
+# Demo/Development endpoints
+GET     /demo/sign-complete             controllers.WaiversController.signComplete(request_id: String, email: String)
+
+# Health check
+GET     /healthcheck                    controllers.HealthcheckController.index()
+
+# Static assets
+GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)

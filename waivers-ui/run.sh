@@ -1,0 +1,1 @@
+elm-live src/Main.elm --port 8080 --pushstate -- --output=elm.js

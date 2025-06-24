@@ -1,0 +1,10 @@
+.scala-build
+.bsp
+.vscode
+.metals
+.apibuilder/.tracked_files
+node_modules
+elm.js
+elm-stuff/
+repl-temp-*
+elm.js

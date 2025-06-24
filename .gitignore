@@ -1,0 +1,31 @@
+# Scala
+target/
+project/project/
+project/target/
+.idea/
+.bsp/
+.metals/
+.vscode/
+
+# SBT
+dist/*
+.cache
+.history
+.lib/
+
+# Play Framework
+logs
+RUNNING_PID
+.sbtserver
+
+# Environment
+.env
+.env.local
+
+# Generated files
+generated/
+!generated/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
