@@ -70,9 +70,9 @@ init flags url key =
 
         ( pageSignModel, pageSignCmd ) =
             case route of
-                Just (Route.RouteSign signatureId) ->
+                Just (Route.RouteSign signParams) ->
                     let
-                        signModel = PageSign.init signatureId url
+                        signModel = PageSign.init signParams.signatureId signParams.pdfUrl
                     in
                     ( Just signModel, Cmd.none )
 
@@ -128,9 +128,9 @@ update msg (Model model) =
 
                 ( pageSignModel, pageSignCmd ) =
                     case route of
-                        Just (Route.RouteSign signatureId) ->
+                        Just (Route.RouteSign signParams) ->
                             let
-                                signModel = PageSign.init signatureId url
+                                signModel = PageSign.init signParams.signatureId signParams.pdfUrl
                             in
                             ( Just signModel, Cmd.none )
 
