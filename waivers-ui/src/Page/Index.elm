@@ -1,7 +1,7 @@
 module Page.Index exposing (view)
 
-import Html exposing (Html, div, h1, h2, p, text, a)
-import Html.Attributes as Attr exposing (class, href)
+import Html exposing (Html, a, div, h1, h2, p, text)
+import Html.Attributes exposing (class, href)
 import Templates.Shell as Shell
 
 

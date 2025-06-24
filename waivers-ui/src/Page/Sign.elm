@@ -1,21 +1,14 @@
 module Page.Sign exposing (Model, Msg(..), init, update, view)
 
+import Constants
+import Generated.ApiRequest as ApiRequest exposing (ApiRequest(..))
+import Generated.IoBryzekWaiversApi as Api
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Svg
 import Svg.Attributes as SvgAttr
-import Constants
-import Generated.IoBryzekWaiversApi as Api
-import Generated.ApiRequest as ApiRequest exposing (ApiRequest(..))
-import Json.Decode as Decode
-import Json.Encode as Encode
-import Http
 import Url
-import Url.Parser as Parser
-import Url.Parser.Query as Query
-import Task
-import Process
 
 
 type alias Model =
@@ -36,19 +29,23 @@ type Msg
 init : String -> Url.Url -> Model
 init signatureId url =
     let
-        pdfUrl = 
+        pdfUrl =
             url.query
-                |> Maybe.map (\queryString -> 
-                    queryString
-                        |> String.split "&"
-                        |> List.filterMap (\param ->
-                            case String.split "=" param of
-                                ["pdf", encodedUrl] -> 
-                                    Just (Maybe.withDefault encodedUrl (Url.percentDecode encodedUrl))
-                                _ -> Nothing
-                        )
-                        |> List.head
-                )
+                |> Maybe.map
+                    (\queryString ->
+                        queryString
+                            |> String.split "&"
+                            |> List.filterMap
+                                (\param ->
+                                    case String.split "=" param of
+                                        [ "pdf", encodedUrl ] ->
+                                            Just (Maybe.withDefault encodedUrl (Url.percentDecode encodedUrl))
+
+                                        _ ->
+                                            Nothing
+                                )
+                            |> List.head
+                    )
                 |> Maybe.withDefault Nothing
     in
     { signatureId = signatureId
@@ -63,31 +60,19 @@ update msg model =
     case msg of
         SignatureDataChanged data ->
             ( { model | signatureData = data }, Cmd.none )
-        
-        SubmitSignature ->
-            let
-                _ = Debug.log "SubmitSignature clicked" model.signatureId
-                _ = Debug.log "Current signatureRequest state" model.signatureRequest
-            in
 
+        SubmitSignature ->
             if String.isEmpty (String.trim model.signatureData) then
-                let
-                    _ = Debug.log "Empty signature data" ""
-                in
                 ( model, Cmd.none )
+
             else
                 ( { model | signatureRequest = Loading }
-                , Cmd.batch
-                    [ submitSignature model.signatureId model.signatureData
-                    ]
+                , submitSignature model.signatureId model.signatureData
                 )
 
         SignatureSubmitted result ->
-            let
-                _ = Debug.log "SignatureSubmitted result" result
-            in
             ( { model | signatureRequest = ApiRequest.fromResult result }, Cmd.none )
-        
+
         RetrySignature ->
             ( { model | signatureRequest = NotAsked }, Cmd.none )
 
@@ -95,12 +80,11 @@ update msg model =
 submitSignature : String -> String -> Cmd Msg
 submitSignature signatureId signatureData =
     let
-        signatureCompletion = Api.SignatureCompletion signatureData
-        
-        httpParams = Api.HttpRequestParams Constants.apiHost []
-        
-        _ = Debug.log "Using API Builder client to complete signature" signatureId
-        _ = Debug.log "Signature data" signatureData
+        signatureCompletion =
+            Api.SignatureCompletion signatureData
+
+        httpParams =
+            Api.HttpRequestParams Constants.apiHost []
     in
     Api.postSignaturesSignaturesCompleteById signatureId signatureCompletion SignatureSubmitted httpParams
 
@@ -111,17 +95,16 @@ view model =
         [ div [ class "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8" ]
             [ div [ class "bg-white rounded-lg shadow-lg overflow-hidden" ]
                 [ div [ class "px-6 py-8 border-b border-gray-200" ]
-                    [ h1 [ class "text-2xl font-bold text-gray-900" ] 
+                    [ h1 [ class "text-2xl font-bold text-gray-900" ]
                         [ text "Sign Your Waiver" ]
                     , p [ class "mt-2 text-gray-600" ]
                         [ text "Please review the document below and provide your signature to complete the waiver." ]
                     ]
-                
                 , div [ class "p-6" ]
                     [ case model.signatureRequest of
                         Success signature ->
                             viewSuccess signature model
-                        
+
                         _ ->
                             viewSigningForm model
                     ]
@@ -144,7 +127,7 @@ viewSuccess signature model =
         , case model.pdfUrl of
             Just pdfUrl ->
                 div [ class "mt-6" ]
-                    [ a 
+                    [ a
                         [ href pdfUrl
                         , download ("waiver-" ++ signature.id ++ ".pdf")
                         , class "inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition-colors"
@@ -154,7 +137,7 @@ viewSuccess signature model =
                         , text "Download Signed Waiver"
                         ]
                     ]
-            
+
             Nothing ->
                 text ""
         ]
@@ -170,22 +153,22 @@ viewSigningForm model =
                     [ h3 [ class "text-lg font-medium text-gray-900 mb-4" ]
                         [ text "Waiver Document" ]
                     , div [ class "border border-gray-300 rounded-lg overflow-hidden" ]
-                        [ iframe 
+                        [ iframe
                             [ src pdfUrl
                             , class "w-full h-96"
                             , title "Waiver Document"
                             , id "waiver-pdf-iframe"
-                            ] 
+                            ]
                             []
                         ]
                     ]
-            
+
             Nothing ->
                 div [ class "bg-yellow-50 border border-yellow-200 rounded-lg p-4" ]
                     [ p [ class "text-yellow-800" ]
                         [ text "PDF document could not be loaded. Please contact support if this issue persists." ]
                     ]
-        
+
         -- Signature Section
         , case model.signatureRequest of
             Loading ->
@@ -199,7 +182,7 @@ viewSigningForm model =
                         , span [ class "text-gray-600" ] [ text "Please wait while we process your signature" ]
                         ]
                     ]
-            
+
             Failure apiError ->
                 div [ class "space-y-4" ]
                     [ div [ class "bg-red-50 border border-red-200 rounded-lg p-4" ]
@@ -228,7 +211,7 @@ viewSigningForm model =
                         ]
                     , viewSignatureForm model
                     ]
-            
+
             _ ->
                 viewSignatureForm model
         ]
@@ -240,28 +223,32 @@ apiErrorToString error =
         ApiRequest.ApiErrorSystem msg ->
             if String.contains "NetworkError" msg then
                 "Unable to connect to the server. Please check your internet connection or try again later."
+
             else if String.contains "Timeout" msg then
                 "Request timed out. Please check your connection and try again."
+
             else
                 "System error: " ++ msg
-        
+
         ApiRequest.ApiErrorNotFound ->
             "Signature not found. This signature may have expired or been removed."
-        
+
         ApiRequest.ApiErrorNotAuthorized ->
             "Not authorized to access this signature."
-        
+
         ApiRequest.ApiErrorUnsupportedStatusCode code ->
             if code == 500 then
                 "Server error. Please try again in a few moments."
+
             else if code == 404 then
                 "Signature endpoint not found. Please contact support."
+
             else
                 "HTTP Error " ++ String.fromInt code ++ ". Please try again."
-        
-        ApiRequest.ApiErrorJsonParse msg ->
+
+        ApiRequest.ApiErrorJsonParse _ ->
             "Failed to parse server response. Please try again or contact support."
-        
+
         ApiRequest.ApiErrorValidation errors ->
             "Validation errors: " ++ String.join ", " (List.map .message errors)
 
@@ -285,7 +272,6 @@ viewSignatureForm model =
                     ]
                     []
                 ]
-            
             , div []
                 [ button
                     [ type_ "button"

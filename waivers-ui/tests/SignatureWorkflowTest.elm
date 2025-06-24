@@ -1,18 +1,19 @@
 module SignatureWorkflowTest exposing (..)
 
 import Expect
-import Test exposing (..)
-import Html
-import Html.Attributes as Attr
-import Test.Html.Query as Query
-import Test.Html.Selector as Selector
-import Page.Sign as Sign
-import Generated.IoBryzekWaiversApi as Api
 import Generated.ApiRequest as ApiRequest exposing (ApiRequest(..))
+import Generated.IoBryzekWaiversApi as Api
+import Html
+import Page.Sign as Sign
+import Test exposing (..)
+import Test.Html.Query as Query
 import Url
 
 
+
 -- This test simulates the exact workflow that the user reported as broken
+
+
 suite : Test
 suite =
     describe "Complete Signature Workflow"
@@ -20,7 +21,7 @@ suite =
             \_ ->
                 let
                     -- 1. User visits signing page with PDF URL
-                    testUrl = 
+                    testUrl =
                         { protocol = Url.Http
                         , host = "localhost"
                         , port_ = Just 8080
@@ -28,26 +29,29 @@ suite =
                         , query = Just "pdf=https%3A%2F%2Fpdf-temp-files.s3.us-west-2.amazonaws.com%2Ftest.pdf"
                         , fragment = Nothing
                         }
-                    
-                    initialModel = Sign.init "sig-test-123" testUrl
-                    
+
+                    initialModel =
+                        Sign.init "sig-test-123" testUrl
+
                     -- 2. User types their name
-                    (modelWithName, _) = Sign.update (Sign.SignatureDataChanged "John Doe") initialModel
-                    
+                    ( modelWithName, _ ) =
+                        Sign.update (Sign.SignatureDataChanged "John Doe") initialModel
+
                     -- 3. User clicks "Sign Waiver" button
-                    (submittingModel, _) = Sign.update Sign.SubmitSignature modelWithName
-                    
+                    ( submittingModel, _ ) =
+                        Sign.update Sign.SubmitSignature modelWithName
+
                     -- 4. Backend responds with successful signature
-                    successSignature = 
+                    successSignature =
                         { id = "sig-test-123"
-                        , user = 
+                        , user =
                             { id = "usr-456"
                             , email = "john@example.com"
                             , firstName = "John"
                             , lastName = "Doe"
                             , phone = Nothing
                             }
-                        , waiver = 
+                        , waiver =
                             { id = "wvr-789"
                             , projectId = "prj-abc"
                             , version = 1
@@ -59,25 +63,26 @@ suite =
                         , signedAt = Nothing
                         , signnowUrl = Nothing
                         }
-                    
-                    apiResult = Ok successSignature
-                    (finalModel, _) = Sign.update (Sign.SignatureSubmitted apiResult) submittingModel
-                    
+
+                    apiResult =
+                        Ok successSignature
+
+                    ( finalModel, _ ) =
+                        Sign.update (Sign.SignatureSubmitted apiResult) submittingModel
+
                     -- 5. Success page should be rendered
-                    successHtml = Sign.view finalModel
-                    
                 in
                 -- Test that the model is in Success state
                 case finalModel.signatureRequest of
-                    Success signature -> 
+                    Success signature ->
                         Expect.equal signature.id "sig-test-123"
-                    _ -> 
+
+                    _ ->
                         Expect.fail "Expected Success state with signature"
-        
         , test "loading state shows processing message" <|
             \_ ->
                 let
-                    testUrl = 
+                    testUrl =
                         { protocol = Url.Http
                         , host = "localhost"
                         , port_ = Just 8080
@@ -85,19 +90,23 @@ suite =
                         , query = Just "pdf=https%3A%2F%2Fexample.com%2Ftest.pdf"
                         , fragment = Nothing
                         }
-                    
-                    model = Sign.init "sig-loading-test" testUrl
-                    loadingModel = { model | signatureRequest = Loading, signatureData = "Test User" }
-                    html = Sign.view loadingModel
+
+                    model =
+                        Sign.init "sig-loading-test" testUrl
+
+                    loadingModel =
+                        { model | signatureRequest = Loading, signatureData = "Test User" }
+
+                    html =
+                        Sign.view loadingModel
                 in
                 html
                     |> Query.fromHtml
                     |> Query.contains [ Html.text "Please wait while we process your signature" ]
-        
         , test "error state shows error message and allows retry" <|
             \_ ->
                 let
-                    testUrl = 
+                    testUrl =
                         { protocol = Url.Http
                         , host = "localhost"
                         , port_ = Just 8080
@@ -105,10 +114,15 @@ suite =
                         , query = Just "pdf=https%3A%2F%2Fexample.com%2Ftest.pdf"
                         , fragment = Nothing
                         }
-                    
-                    model = Sign.init "sig-error-test" testUrl
-                    errorModel = { model | signatureRequest = Failure ApiRequest.ApiErrorNotFound }
-                    html = Sign.view errorModel
+
+                    model =
+                        Sign.init "sig-error-test" testUrl
+
+                    errorModel =
+                        { model | signatureRequest = Failure ApiRequest.ApiErrorNotFound }
+
+                    html =
+                        Sign.view errorModel
                 in
                 html
                     |> Query.fromHtml

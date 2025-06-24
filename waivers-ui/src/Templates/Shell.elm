@@ -1,7 +1,7 @@
 module Templates.Shell exposing (view)
 
-import Html exposing (Html, div, nav, h1, a, text, p)
-import Html.Attributes as Attr exposing (class, href)
+import Html exposing (Html, a, div, h1, nav, p, text)
+import Html.Attributes exposing (class, href)
 
 
 view : { title : String, content : List (Html msg), currentYear : Maybe Int } -> Html msg
