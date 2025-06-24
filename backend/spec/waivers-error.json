@@ -1,0 +1,22 @@
+{
+  "name": "waivers-error",
+  "namespace": "io.bryzek.waivers.error.v0",
+
+  "models": {
+    "generic_error": {
+      "description": "A generic error message",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "description": "Machine readable error code"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "Human readable error message"
+        }
+      ]
+    }
+  }
+}

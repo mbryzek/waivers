@@ -1,11 +1,18 @@
 # Scala
-target/
-project/project/
-project/target/
-.idea/
-.bsp/
-.metals/
-.vscode/
+backend/project/project/
+backend/project/target/
+backend/.idea/
+backend/.bsp/
+backend/.metals/
+backend/.vscode/
+backend/.bloop/
+backend/run.sh
+
+# Elm
+waivers-ui/elm-stuff/
+waivers-ui/elm.js
+waivers-ui/node_modules/
+waivers-ui/public/
 
 # SBT
 dist/*

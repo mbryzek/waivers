@@ -1,0 +1,180 @@
+{
+  "name": "waivers-api",
+  "namespace": "io.bryzek.waivers.api.v0",
+
+  "imports": [
+    {
+      "uri": "https://app.apibuilder.io/bryzek/waivers-error/latest/service.json"
+    }
+  ],
+
+  "enums": {
+    "signature_status": {
+      "description": "Status of a waiver signature",
+      "values": [
+        {
+          "name": "pending",
+          "description": "Signature has been initiated but not completed"
+        },
+        {
+          "name": "signed", 
+          "description": "Waiver has been successfully signed"
+        },
+        {
+          "name": "expired",
+          "description": "Signature request has expired"
+        },
+        {
+          "name": "cancelled",
+          "description": "Signature request was cancelled"
+        }
+      ]
+    }
+  },
+
+  "models": {
+    "project": {
+      "description": "A waiver project",
+      "fields": [
+        { "name": "id", "type": "string", "description": "Unique identifier" },
+        { "name": "name", "type": "string", "description": "Display name of the project" },
+        { "name": "slug", "type": "string", "description": "URL-friendly unique identifier" },
+        { "name": "description", "type": "string", "required": false, "description": "Optional project description" },
+        { "name": "is_active", "type": "boolean", "description": "Whether this project is accepting new waivers" }
+      ]
+    },
+
+    "user": {
+      "description": "A participant who signs waivers",
+      "fields": [
+        { "name": "id", "type": "string", "description": "Unique identifier" },
+        { "name": "email", "type": "string", "description": "Email address" },
+        { "name": "first_name", "type": "string", "description": "First name" },
+        { "name": "last_name", "type": "string", "description": "Last name" },
+        { "name": "phone", "type": "string", "required": false, "description": "Optional phone number" }
+      ]
+    },
+
+    "waiver": {
+      "description": "A waiver template",
+      "fields": [
+        { "name": "id", "type": "string", "description": "Unique identifier" },
+        { "name": "project_id", "type": "string", "description": "Project this waiver belongs to" },
+        { "name": "version", "type": "integer", "description": "Version number" },
+        { "name": "title", "type": "string", "description": "Title of the waiver" },
+        { "name": "content", "type": "string", "description": "Full waiver text content" },
+        { "name": "is_current", "type": "boolean", "description": "Whether this is the current version" }
+      ]
+    },
+
+    "signature": {
+      "description": "A signed waiver",
+      "fields": [
+        { "name": "id", "type": "string", "description": "Unique identifier" },
+        { "name": "user", "type": "user", "description": "User who signed the waiver" },
+        { "name": "waiver", "type": "waiver", "description": "Waiver that was signed" },
+        { "name": "status", "type": "signature_status", "description": "Current status of the signature" },
+        { "name": "signed_at", "type": "date-time-iso8601", "required": false, "description": "When the waiver was signed" },
+        { "name": "signnow_url", "type": "string", "required": false, "description": "URL to sign the document (for pending signatures)" }
+      ]
+    },
+
+    "waiver_form": {
+      "description": "Form data for creating a new waiver signature",
+      "fields": [
+        { "name": "first_name", "type": "string", "description": "First name of the signer" },
+        { "name": "last_name", "type": "string", "description": "Last name of the signer" },
+        { "name": "email", "type": "string", "description": "Email address of the signer" },
+        { "name": "phone", "type": "string", "required": false, "description": "Optional phone number" }
+      ]
+    },
+
+    "signature_completion": {
+      "description": "Data for completing a signature",
+      "fields": [
+        { "name": "signature_data", "type": "string", "description": "The signature data (e.g., typed name or signature image data)" }
+      ]
+    }
+  },
+
+  "resources": {
+    "project": {
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/projects/:slug",
+          "description": "Get project by slug",
+          "parameters": [
+            { "name": "slug", "type": "string", "location": "path", "description": "Project slug" }
+          ],
+          "responses": {
+            "200": { "type": "project" },
+            "404": { "type": "io.bryzek.waivers.error.v0.models.generic_error" }
+          }
+        }
+      ]
+    },
+
+    "waiver": {
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/projects/:slug/waiver",
+          "description": "Get current waiver for a project",
+          "parameters": [
+            { "name": "slug", "type": "string", "location": "path", "description": "Project slug" }
+          ],
+          "responses": {
+            "200": { "type": "waiver" },
+            "404": { "type": "io.bryzek.waivers.error.v0.models.generic_error" }
+          }
+        }
+      ]
+    },
+
+    "signature": {
+      "operations": [
+        {
+          "method": "POST",
+          "path": "/projects/:slug/signatures",
+          "description": "Create a new waiver signature",
+          "parameters": [
+            { "name": "slug", "type": "string", "location": "path", "description": "Project slug" }
+          ],
+          "body": { "type": "waiver_form" },
+          "responses": {
+            "201": { "type": "signature" },
+            "400": { "type": "[io.bryzek.waivers.error.v0.models.generic_error]" },
+            "404": { "type": "io.bryzek.waivers.error.v0.models.generic_error" }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/signatures/:id",
+          "description": "Get signature status",
+          "parameters": [
+            { "name": "id", "type": "string", "location": "path", "description": "Signature ID" }
+          ],
+          "responses": {
+            "200": { "type": "signature" },
+            "404": { "type": "io.bryzek.waivers.error.v0.models.generic_error" }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/signatures/:id/complete",
+          "description": "Complete a signature with signature data",
+          "parameters": [
+            { "name": "id", "type": "string", "location": "path", "description": "Signature ID" }
+          ],
+          "body": { "type": "signature_completion" },
+          "responses": {
+            "200": { "type": "signature" },
+            "400": { "type": "[io.bryzek.waivers.error.v0.models.generic_error]" },
+            "404": { "type": "io.bryzek.waivers.error.v0.models.generic_error" }
+          }
+        }
+      ]
+    }
+  }
+}
