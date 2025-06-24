@@ -1,4 +1,10 @@
+.metals/
+
 # Scala
+backend/project/.bloop/
+backend/project/.ivy/
+backend/project/metals.sbt
+backend/target/
 backend/project/project/
 backend/project/target/
 backend/.idea/
