@@ -8,7 +8,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Svg
 import Svg.Attributes as SvgAttr
-import Url
 
 
 type alias Model =
@@ -26,28 +25,8 @@ type Msg
     | RetrySignature
 
 
-init : String -> Url.Url -> Model
-init signatureId url =
-    let
-        pdfUrl =
-            url.query
-                |> Maybe.map
-                    (\queryString ->
-                        queryString
-                            |> String.split "&"
-                            |> List.filterMap
-                                (\param ->
-                                    case String.split "=" param of
-                                        [ "pdf", encodedUrl ] ->
-                                            Just (Maybe.withDefault encodedUrl (Url.percentDecode encodedUrl))
-
-                                        _ ->
-                                            Nothing
-                                )
-                            |> List.head
-                    )
-                |> Maybe.withDefault Nothing
-    in
+init : String -> Maybe String -> Model
+init signatureId pdfUrl =
     { signatureId = signatureId
     , pdfUrl = pdfUrl
     , signatureData = ""

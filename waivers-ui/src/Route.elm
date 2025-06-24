@@ -2,12 +2,19 @@ module Route exposing (Route(..), fromUrl)
 
 import Url exposing (Url)
 import Url.Parser exposing (..)
+import Url.Parser.Query as Query
+
+
+type alias SignParams =
+    { signatureId : String
+    , pdfUrl : Maybe String
+    }
 
 
 type Route
     = RouteHome
     | RouteWaiver String
-    | RouteSign String
+    | RouteSign SignParams
     | RouteAdmin
     | RouteAdminProjects
     | RouteAdminProjectDetail String
@@ -25,7 +32,8 @@ matchRoute =
     oneOf
         [ map RouteHome top
         , map RouteWaiver (s "waiver" </> string)
-        , map RouteSign (s "sign" </> string)
+        , map (\signatureId pdfUrl -> RouteSign { signatureId = signatureId, pdfUrl = Maybe.andThen Url.percentDecode pdfUrl }) 
+            (s "sign" </> string <?> Query.string "pdf")
         , map RouteAdmin (s "admin")
         , map RouteAdminProjects (s "admin" </> s "projects")
         , map RouteAdminProjectDetail (s "admin" </> s "projects" </> string)
