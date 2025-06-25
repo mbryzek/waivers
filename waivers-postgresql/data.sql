@@ -8,9 +8,9 @@ INSERT INTO projects (
   id,
   name,
   slug,
+  status,
   description,
   waiver_template,
-  status,
   created_at,
   updated_at,
   updated_by_user_id,
@@ -19,6 +19,7 @@ INSERT INTO projects (
   'prj-' || replace(gen_random_uuid()::text, '-', ''),
   'Lake View Summit Pickleball',
   'pickleball',
+  'active',
   'Digital waiver system for Lake View Summit Pickleball participants. Participants must sign liability waivers before playing.',
   '# Waiver, Release of Claims, Covenant Not to Sue, and Indemnity Agreement
 
@@ -116,11 +117,10 @@ As the Participant or Participant''s parent/guardian, I acknowledge:
 * I allow my Participant to participate in the activity at the Facility.
 * I have explained all risks to the Participant.
 * Both I and the Participant understand the seriousness of the risks and our personal responsibility for adhering to rules and regulations.',
-  'active',
   now(),
   now(),
   'sys-migration',
-  extract(epoch from now())::bigint
+  0
 );
 
 -- Create the initial waiver version for the project
@@ -240,5 +240,5 @@ As the Participant or Participant''s parent/guardian, I acknowledge:
   now(),
   now(),
   'sys-migration',
-  extract(epoch from now())::bigint
+  0
 );

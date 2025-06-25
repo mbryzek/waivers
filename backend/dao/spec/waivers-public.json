@@ -1,6 +1,31 @@
 {
   "name": "waivers-public",
-  "namespace": "io.bryzek.waivers.dao.v0",
+  "attributes": [
+    {
+      "name": "scala",
+      "value": {
+        "version": "3.4",
+        "package": "db.generated"
+      }
+    },
+    {
+      "name": "psql",
+      "value": {
+        "pkey": "id",
+        "hash_code": {},
+        "audit": {
+          "created": {
+            "at": { "type": "date-time-iso8601" }
+          },
+          "updated": {
+            "at": { "type": "date-time-iso8601" },
+            "by": { "name": "updated_by_user_id", "type": "string" }
+          }
+        }
+      }
+    }
+  ],
+
   "models": {
     "project": {
       "description": "A waiver project",
@@ -20,12 +45,6 @@
               "class": "com.mbryzek.util.IdGenerator",
               "prefix": "prj"
             }
-          }
-        },
-        {
-          "name": "psql",
-          "value": {
-            "pkey": "id"
           }
         }
       ]
@@ -53,7 +72,9 @@
         {
           "name": "psql",
           "value": {
-            "pkey": "id"
+            "indexes": [
+              { "fields": ["lower_email"], "unique":  true }
+            ]
           }
         }
       ]
@@ -81,7 +102,15 @@
         {
           "name": "psql",
           "value": {
-            "pkey": "id"
+            "indexes": [
+              { "fields": ["project_id"] }
+            ],
+            "foreign_keys": [
+              {
+                "fields": ["project_id"],
+                "references": "public.projects"
+              }
+            ]
           }
         }
       ]
@@ -109,7 +138,21 @@
         {
           "name": "psql",
           "value": {
-            "pkey": "id"
+            "indexes": [
+              {
+                "fields": [
+                  "project_id"
+                ]
+              }
+            ],
+            "foreign_keys": [
+              {
+                "fields": [
+                  "project_id"
+                ],
+                "references": "public.projects"
+              }
+            ]
           }
         }
       ]
@@ -133,12 +176,6 @@
               "class": "com.mbryzek.util.IdGenerator",
               "prefix": "srt"
             }
-          }
-        },
-        {
-          "name": "psql",
-          "value": {
-            "pkey": "id"
           }
         }
       ]
@@ -169,7 +206,16 @@
         {
           "name": "psql",
           "value": {
-            "pkey": "id"
+            "indexes": [
+              { "fields": ["user_id"] },
+              { "fields": ["waiver_id"] }
+            ],
+            "foreign_keys": [
+              {
+                "fields": ["waiver_id"],
+                "references": "public.waivers"
+              }
+            ]
           }
         }
       ]

@@ -74,11 +74,11 @@ class SignatureService @Inject()(
   }
 
   def findWithFilters(
-    projectId: Option[String],
-    status: Option[String],
-    email: Option[String],
-    limit: Long,
-    offset: Long
+    @unused projectId: Option[String],
+    @unused status: Option[String],
+    @unused email: Option[String],
+    @unused limit: Long,
+    @unused offset: Long
   ): Future[Seq[Signature]] = {
     // TODO: Implement filtering logic
     // For now, return empty list as placeholder
@@ -97,7 +97,7 @@ class SignatureService @Inject()(
           lastName = form.lastName,
           phone = form.phone
         )
-        usersDao.updateById(existingUser.id, updatedForm)
+        usersDao.updateById("system", existingUser.id, updatedForm)
         User(usersDao.findById(existingUser.id).getOrElse(existingUser))
 
       case None =>
@@ -108,7 +108,7 @@ class SignatureService @Inject()(
           lastName = form.lastName,
           phone = form.phone
         )
-        val insertedUserId = usersDao.insert(userForm)
+        val insertedUserId = usersDao.insert("system", userForm)
         User(usersDao.findById(insertedUserId).get)
     }
   }
@@ -125,7 +125,7 @@ class SignatureService @Inject()(
       ipAddress = Some(ipAddress)
     )
 
-    val insertedSignatureId = signaturesDao.insert(signatureForm)
+    val insertedSignatureId = signaturesDao.insert("system", signatureForm)
     Signature(signaturesDao.findById(insertedSignatureId).get)
   }
 
@@ -134,17 +134,17 @@ class SignatureService @Inject()(
       val updatedForm = existingSignature.form.copy(
         signatureRequestId = Some(requestId)
       )
-      signaturesDao.updateById(signatureId, updatedForm)
+      signaturesDao.updateById("system", signatureId, updatedForm)
     }
   }
 
-  def markSignatureAsSigned(signatureId: String, signatureData: String): Future[Option[Signature]] = Future {
+  def markSignatureAsSigned(signatureId: String, @unused signatureData: String): Future[Option[Signature]] = Future {
     signaturesDao.findById(signatureId).map { existingSignature =>
       val updatedForm = existingSignature.form.copy(
         status = "signed", // Using string instead of SignatureStatus.Signed.name
         signedAt = Some(DateTime.now())
       )
-      signaturesDao.updateById(signatureId, updatedForm)
+      signaturesDao.updateById("system", signatureId, updatedForm)
       Signature(signaturesDao.findById(signatureId).getOrElse(
         throw new RuntimeException(s"Failed to find updated signature with id $signatureId")
       ))

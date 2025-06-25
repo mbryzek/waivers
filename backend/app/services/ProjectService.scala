@@ -28,7 +28,7 @@ class ProjectService @Inject()(
     projectsDao.findAll(limit = Some(limit), offset = offset).map(toInternal)
   }
 
-  def create(name: String, slug: String, description: Option[String], waiverTemplate: String, status: String = "active"): Future[Project] = Future {
+  def create(name: String, slug: String, description: Option[String], waiverTemplate: String, status: String = "active", user: String = "system"): Future[Project] = Future {
     val projectForm = GeneratedProjectForm(
       name = name,
       slug = slug,
@@ -38,7 +38,7 @@ class ProjectService @Inject()(
     )
     
     // Insert the project
-    val insertedProjectId = projectsDao.insert(projectForm)
+    val insertedProjectId = projectsDao.insert(user, projectForm)
     val insertedProject = projectsDao.findById(insertedProjectId).get
     
     // Create a default waiver for the project
@@ -50,13 +50,13 @@ class ProjectService @Inject()(
       status = "current"
     )
     
-    waiversDao.insert(waiverForm)
+    waiversDao.insert(user, waiverForm)
     
     // Return the created project
     toInternal(insertedProject)
   }
 
-  def update(id: String, name: String, slug: String, description: Option[String], waiverTemplate: String, status: String): Future[Option[Project]] = {
+  def update(id: String, name: String, slug: String, description: Option[String], waiverTemplate: String, status: String, user: String = "system"): Future[Option[Project]] = {
     Future {
       projectsDao.findById(id).map { existingProject =>
         val updatedForm = existingProject.form.copy(
@@ -67,7 +67,7 @@ class ProjectService @Inject()(
           status = status
         )
         
-        projectsDao.updateById(id, updatedForm)
+        projectsDao.updateById(user, id, updatedForm)
         
         // Return the updated project
         projectsDao.findById(id).map(toInternal).getOrElse(toInternal(existingProject))

@@ -9,8 +9,12 @@ create table users(
   first_name          text not null check(util.non_empty_trimmed_string(first_name)),
   last_name           text not null check(util.non_empty_trimmed_string(last_name)),
   phone               text check(util.null_or_non_empty_trimmed_string(phone)),
-  created_at          timestamptz not null,
-  updated_at          timestamptz not null,
+  created_at          timestamptz default now() not null,
+  updated_at          timestamptz default now() not null,
   updated_by_user_id  text not null check(util.non_empty_trimmed_string(updated_by_user_id)),
   hash_code           bigint not null
 );
+
+create unique index users_lower_email_un_idx on users(lower_email);
+
+select schema_evolution_manager.create_updated_at_trigger('public', 'users');

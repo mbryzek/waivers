@@ -8,7 +8,7 @@ create table projects(
   slug                text not null check(util.non_empty_trimmed_string(slug)),
   description         text check(util.null_or_non_empty_trimmed_string(description)),
   waiver_template     text not null check(util.non_empty_trimmed_string(waiver_template)),
-  is_active           boolean default 'true' not null,
+  status              text not null check(util.non_empty_trimmed_string(status)),
   created_at          timestamptz default now() not null,
   updated_at          timestamptz default now() not null,
   updated_by_user_id  text not null check(util.non_empty_trimmed_string(updated_by_user_id)),

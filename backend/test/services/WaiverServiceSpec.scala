@@ -20,7 +20,7 @@ class WaiverServiceSpec extends DefaultAppSpec with DatabaseHelpers {
       result.get.id mustBe currentWaiver.id
       result.get.projectId mustBe project.id
       result.get.version mustBe 2
-      result.get.isCurrent mustBe true
+      result.get.status mustBe "current"
     }
 
     "return None when no current waiver exists" in {
@@ -55,7 +55,7 @@ class WaiverServiceSpec extends DefaultAppSpec with DatabaseHelpers {
       result.get.id mustBe currentWaiver.id
       result.get.version mustBe 3
       result.get.title mustBe "Version 3"
-      result.get.isCurrent mustBe true
+      result.get.status mustBe "current"
     }
   }
 
