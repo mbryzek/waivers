@@ -1,9 +1,15 @@
-module Constants exposing (apiHost)
+module Constants exposing (anonParams, apiHost)
 
-
--- API Configuration
+import Generated.IoBryzekWaiversApi exposing (HttpRequestParams)
 
 
 apiHost : String
 apiHost =
     "http://localhost:9300"
+
+
+anonParams : HttpRequestParams
+anonParams =
+    { apiHost = apiHost
+    , headers = []
+    }

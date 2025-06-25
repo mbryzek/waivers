@@ -41,13 +41,9 @@ update msg model =
             ( { model | signatureData = data }, Cmd.none )
 
         SubmitSignature ->
-            if String.isEmpty (String.trim model.signatureData) then
-                ( model, Cmd.none )
-
-            else
-                ( { model | signatureRequest = Loading }
-                , submitSignature model.signatureId model.signatureData
-                )
+            ( { model | signatureRequest = Loading }
+            , submitSignature model.signatureId model.signatureData
+            )
 
         SignatureSubmitted result ->
             ( { model | signatureRequest = ApiRequest.fromResult result }, Cmd.none )

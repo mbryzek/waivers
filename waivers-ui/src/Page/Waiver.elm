@@ -105,7 +105,7 @@ update msg model =
                             )
 
                         Nothing ->
-                            ( { model | signatureResponse = ApiRequest.Success signature }
+                            ( { model | signatureResponse = ApiRequest.makeValidationErrorRequest "No signature URL" }
                             , Cmd.none
                             )
 
@@ -117,10 +117,7 @@ update msg model =
 
 loadProject : String -> Cmd Msg
 loadProject slug =
-    Http.get
-        { url = Constants.apiHost ++ "/projects/" ++ slug
-        , expect = ApiRequest.expectJson ProjectLoaded Api.projectDecoder
-        }
+    Api.getProjectsProjectsBySlug slug ProjectLoaded (Api.HttpRequestParams Constants.apiHost [])
 
 
 createSignatureRequest : String -> WaiverForm -> Api.HttpRequestParams -> Cmd Msg
