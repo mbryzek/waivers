@@ -18,20 +18,18 @@ trait DatabaseHelpers {
     isActive: Boolean = true
   )(implicit app: Application): Project = {
     val projectsDao = instanceOf[ProjectsDao]
-    val projectId = s"prj-${UUID.randomUUID().toString.replace("-", "")}"
     
     val projectForm = ProjectForm(
-      id = projectId,
       name = name,
       slug = slug,
       description = description,
       waiverTemplate = waiverTemplate,
-      isActive = isActive
+      status = if (isActive) "active" else "inactive"
     )
     
-    projectsDao.insert("test-user", projectForm)
-    Project(projectsDao.findById(projectId).getOrElse(
-      throw new RuntimeException(s"Failed to create project with id $projectId")
+    val insertedProjectId = projectsDao.insert("test-user", projectForm)
+    Project(projectsDao.findById(insertedProjectId).getOrElse(
+      throw new RuntimeException(s"Failed to create project with id $insertedProjectId")
     ))
   }
 
@@ -42,10 +40,8 @@ trait DatabaseHelpers {
     phone: Option[String] = None
   )(implicit app: Application): User = {
     val usersDao = instanceOf[UsersDao]
-    val userId = s"usr-${UUID.randomUUID().toString.replace("-", "")}"
     
     val userForm = UserForm(
-      id = userId,
       email = email,
       lowerEmail = email.toLowerCase,
       firstName = firstName,
@@ -53,9 +49,9 @@ trait DatabaseHelpers {
       phone = phone
     )
     
-    usersDao.insert("test-user", userForm)
-    User(usersDao.findById(userId).getOrElse(
-      throw new RuntimeException(s"Failed to create user with id $userId")
+    val insertedUserId = usersDao.insert("test-user", userForm)
+    User(usersDao.findById(insertedUserId).getOrElse(
+      throw new RuntimeException(s"Failed to create user with id $insertedUserId")
     ))
   }
 
@@ -67,20 +63,18 @@ trait DatabaseHelpers {
     isCurrent: Boolean = true
   )(implicit app: Application): Waiver = {
     val waiversDao = instanceOf[WaiversDao]
-    val waiverId = s"wvr-${UUID.randomUUID().toString.replace("-", "")}"
     
     val waiverForm = WaiverForm(
-      id = waiverId,
       projectId = projectId,
       version = version,
       title = title,
       content = content,
-      isCurrent = isCurrent
+      status = if (isCurrent) "current" else "archived"
     )
     
-    waiversDao.insert("test-user", waiverForm)
-    Waiver(waiversDao.findById(waiverId).getOrElse(
-      throw new RuntimeException(s"Failed to create waiver with id $waiverId")
+    val insertedWaiverId = waiversDao.insert("test-user", waiverForm)
+    Waiver(waiversDao.findById(insertedWaiverId).getOrElse(
+      throw new RuntimeException(s"Failed to create waiver with id $insertedWaiverId")
     ))
   }
 
@@ -91,10 +85,8 @@ trait DatabaseHelpers {
     ipAddress: Option[String] = Some("127.0.0.1")
   )(implicit app: Application): Signature = {
     val signaturesDao = instanceOf[SignaturesDao]
-    val signatureId = s"sig-${UUID.randomUUID().toString.replace("-", "")}"
     
     val signatureForm = SignatureForm(
-      id = signatureId,
       userId = userId,
       waiverId = waiverId,
       signatureTemplateId = None,
@@ -105,9 +97,9 @@ trait DatabaseHelpers {
       ipAddress = ipAddress
     )
     
-    signaturesDao.insert("test-user", signatureForm)
-    Signature(signaturesDao.findById(signatureId).getOrElse(
-      throw new RuntimeException(s"Failed to create signature with id $signatureId")
+    val insertedSignatureId = signaturesDao.insert("test-user", signatureForm)
+    Signature(signaturesDao.findById(insertedSignatureId).getOrElse(
+      throw new RuntimeException(s"Failed to create signature with id $insertedSignatureId")
     ))
   }
 }

@@ -56,7 +56,7 @@ class WaiversControllerSpec extends DefaultServerSpec
       result.id mustBe waiver.id
       result.title mustBe "Test Waiver"
       result.content mustBe "Test content"
-      result.isCurrent mustBe true
+      result.status mustBe apiModels.WaiverStatus.Current
     }
 
     "return 404 when project not found" in {

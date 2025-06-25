@@ -26,7 +26,7 @@ class WaiversController @Inject()(
       name = internal.name,
       slug = internal.slug,
       description = internal.description,
-      isActive = internal.status == "active"
+      status = if (internal.status == "active") apiModels.ProjectStatus.Active else apiModels.ProjectStatus.Inactive
     )
   }
 
@@ -37,7 +37,7 @@ class WaiversController @Inject()(
       version = internal.version,
       title = internal.title,
       content = internal.content,
-      isCurrent = internal.status == "current"
+      status = if (internal.status == "current") apiModels.WaiverStatus.Current else apiModels.WaiverStatus.Archived
     )
   }
 
