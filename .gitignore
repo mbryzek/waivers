@@ -37,10 +37,6 @@ RUNNING_PID
 .env
 .env.local
 
-# Generated files
-generated/
-!generated/.gitkeep
-
 # OS
 .DS_Store
 Thumbs.db
