@@ -236,7 +236,7 @@ As the Participant or Participant''s parent/guardian, I acknowledge:
 * I allow my Participant to participate in the activity at the Facility.
 * I have explained all risks to the Participant.
 * Both I and the Participant understand the seriousness of the risks and our personal responsibility for adhering to rules and regulations.',
-  'active',
+  'current',
   now(),
   now(),
   'sys-migration',

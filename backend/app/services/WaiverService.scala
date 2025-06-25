@@ -1,8 +1,11 @@
 package services
 
-import db.generated.{WaiversDao, Waiver => GeneratedWaiver}
+import com.mbryzek.util.OrderBy
+import db.generated.{WaiversDao, Waiver as GeneratedWaiver}
+import io.bryzek.waivers.api.v0.models.WaiverStatus
 import models.internal.Waiver
-import javax.inject._
+
+import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
 import org.joda.time.DateTime
 
@@ -14,10 +17,10 @@ class WaiverService @Inject()(
   private def toInternal(generated: GeneratedWaiver): Waiver = Waiver(generated)
 
   def findCurrentByProjectId(projectId: String): Future[Option[Waiver]] = Future {
-    waiversDao.findAll(limit = Some(1))(using query =>
+    waiversDao.findAll(limit = Some(1), orderBy = Some(OrderBy("-created_at")))(using query =>
       query
-        .equals("waivers.project_id", Some(projectId))
-        .equals("waivers.status", Some("current"))
+        .equals("waivers.project_id", projectId)
+        .equals("waivers.status", WaiverStatus.Current.toString)
     ).headOption.map(toInternal)
   }
 

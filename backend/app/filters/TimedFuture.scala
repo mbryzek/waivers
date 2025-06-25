@@ -10,6 +10,6 @@ object TimedFuture {
 }
 
 case class Timed[T](value: T, issuedAt: Long, completedAt: Long) {
-  lazy val durationNs: Long = completedAt - issuedAt
+  private lazy val durationNs: Long = completedAt - issuedAt
   lazy val durationMs: Long = durationNs / 1000000
 }
