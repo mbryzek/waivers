@@ -87,18 +87,18 @@ class SignatureService @Inject()(
 
   private def findOrCreateUser(form: WaiverForm): Future[User] = Future {
     // Try to find user by email using the query builder
-    usersDao.findAll(limit = Some(1))(query => query.equals("users.email", Some(form.email))).headOption match {
-      case Some(generatedUser) =>
+    usersDao.findAll(limit = Some(1))(using query => query.equals("users.email", Some(form.email))).headOption match {
+      case Some(existingUser) =>
         // Update user with latest information
-        val updatedForm = generatedUser.form.copy(
+        val updatedForm = existingUser.form.copy(
           email = form.email,
           lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
           phone = form.phone
         )
-        usersDao.updateById(generatedUser.id, updatedForm)
-        User(usersDao.findById(generatedUser.id).getOrElse(generatedUser))
+        usersDao.updateById(existingUser.id, updatedForm)
+        User(usersDao.findById(existingUser.id).getOrElse(existingUser))
 
       case None =>
         val userForm = db.generated.UserForm(
@@ -108,8 +108,8 @@ class SignatureService @Inject()(
           lastName = form.lastName,
           phone = form.phone
         )
-        val insertedUser = usersDao.insert(userForm)
-        User(insertedUser)
+        val insertedUserId = usersDao.insert(userForm)
+        User(usersDao.findById(insertedUserId).get)
     }
   }
 
@@ -125,8 +125,8 @@ class SignatureService @Inject()(
       ipAddress = Some(ipAddress)
     )
 
-    val insertedSignature = signaturesDao.insert(signatureForm)
-    Signature(insertedSignature)
+    val insertedSignatureId = signaturesDao.insert(signatureForm)
+    Signature(signaturesDao.findById(insertedSignatureId).get)
   }
 
   private def updateSignatureWithRequestId(signatureId: String, requestId: String): Future[Unit] = Future {
