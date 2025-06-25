@@ -2,6 +2,9 @@
 .metals/
 
 # Scala
+backend/generated/
+backend/project/.boot/
+backend/project/.sbtboot/
 backend/dao/psql
 backend/project/.bloop/
 backend/project/.ivy/
@@ -36,10 +39,6 @@ RUNNING_PID
 # Environment
 .env
 .env.local
-
-# Generated files
-generated/
-!generated/.gitkeep
 
 # OS
 .DS_Store

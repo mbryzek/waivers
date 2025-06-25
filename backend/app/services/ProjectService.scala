@@ -17,7 +17,7 @@ class ProjectService @Inject()(
   private def toInternal(generated: GeneratedProject): Project = Project(generated)
 
   def findBySlug(slug: String): Future[Option[Project]] = Future {
-    projectsDao.findAll(limit = Some(1))(query => query.equals("projects.slug", Some(slug))).headOption.map(toInternal)
+    projectsDao.findAll(limit = Some(1))(using query => query.equals("projects.slug", Some(slug))).headOption.map(toInternal)
   }
 
   def findById(id: String): Future[Option[Project]] = Future {
@@ -34,15 +34,12 @@ class ProjectService @Inject()(
       slug = slug,
       description = description,
       waiverTemplate = waiverTemplate,
-      status = status,
-      createdAt = DateTime.now(),
-      updatedAt = DateTime.now(),
-      updatedByUserId = "system", // TODO: Get proper user context
-      hashCode = System.currentTimeMillis()
+      status = status
     )
     
     // Insert the project
-    val insertedProject = projectsDao.insert("system", projectForm)
+    val insertedProjectId = projectsDao.insert(projectForm)
+    val insertedProject = projectsDao.findById(insertedProjectId).get
     
     // Create a default waiver for the project
     val waiverForm = GeneratedWaiverForm(
@@ -50,14 +47,10 @@ class ProjectService @Inject()(
       version = 1,
       title = s"$name Waiver",
       content = waiverTemplate,
-      status = "current",
-      createdAt = DateTime.now(),
-      updatedAt = DateTime.now(),
-      updatedByUserId = "system", // TODO: Get proper user context
-      hashCode = System.currentTimeMillis()
+      status = "current"
     )
     
-    waiversDao.insert("system", waiverForm)
+    waiversDao.insert(waiverForm)
     
     // Return the created project
     toInternal(insertedProject)
@@ -71,12 +64,10 @@ class ProjectService @Inject()(
           slug = slug,
           description = description,
           waiverTemplate = waiverTemplate,
-          status = status,
-          updatedAt = DateTime.now(),
-          updatedByUserId = "system" // TODO: Get proper user context
+          status = status
         )
         
-        projectsDao.updateById("system", id, updatedForm)
+        projectsDao.updateById(id, updatedForm)
         
         // Return the updated project
         projectsDao.findById(id).map(toInternal).getOrElse(toInternal(existingProject))

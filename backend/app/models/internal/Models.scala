@@ -16,10 +16,8 @@ case class Project(
   name: String,
   slug: String,
   description: Option[String],
-  isActive: Boolean,
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  waiverTemplate: String,
+  status: String
 )
 
 object Project {
@@ -29,10 +27,8 @@ object Project {
       name = generated.name,
       slug = generated.slug,
       description = generated.description,
-      isActive = generated.isActive,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      waiverTemplate = generated.waiverTemplate,
+      status = generated.status
     )
   }
 
@@ -44,10 +40,7 @@ case class User(
   email: String,
   firstName: String,
   lastName: String,
-  phone: Option[String],
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  phone: Option[String]
 )
 
 object User {
@@ -57,10 +50,7 @@ object User {
       email = generated.email,
       firstName = generated.firstName,
       lastName = generated.lastName,
-      phone = generated.phone,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      phone = generated.phone
     )
   }
 
@@ -73,10 +63,7 @@ case class Waiver(
   version: Int,
   title: String,
   content: String,
-  isCurrent: Boolean,
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  status: String
 )
 
 object Waiver {
@@ -87,10 +74,7 @@ object Waiver {
       version = generated.version,
       title = generated.title,
       content = generated.content,
-      isCurrent = generated.isCurrent,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      status = generated.status
     )
   }
 
@@ -103,10 +87,7 @@ case class SignatureTemplate(
   provider: SignatureProvider,
   providerTemplateId: String,
   name: String,
-  isActive: Boolean,
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  status: String
 )
 
 object SignatureTemplate {
@@ -117,10 +98,7 @@ object SignatureTemplate {
       provider = SignatureProvider.fromString(generated.provider).getOrElse(SignatureProvider.DocuSign),
       providerTemplateId = generated.providerTemplateId,
       name = generated.name,
-      isActive = generated.isActive,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      status = generated.status
     )
   }
 
@@ -134,10 +112,7 @@ case class SignatureRequest(
   providerRequestId: String,
   signingUrl: Option[String],
   status: SignatureRequestStatus,
-  metadata: Option[String],
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  metadata: Option[String]
 )
 
 object SignatureRequest {
@@ -149,10 +124,7 @@ object SignatureRequest {
       providerRequestId = generated.providerRequestId,
       signingUrl = generated.signingUrl,
       status = SignatureRequestStatus.fromString(generated.status).getOrElse(SignatureRequestStatus.Created),
-      metadata = generated.metadata,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      metadata = generated.metadata
     )
   }
 
@@ -168,10 +140,7 @@ case class Signature(
   status: SignatureStatus,
   signedAt: Option[DateTime],
   pdfUrl: Option[String],
-  ipAddress: Option[String],
-  createdAt: DateTime,
-  updatedAt: DateTime,
-  updatedByUserId: String
+  ipAddress: Option[String]
 )
 
 object Signature {
@@ -185,10 +154,7 @@ object Signature {
       status = SignatureStatus.fromString(generated.status).getOrElse(SignatureStatus.Pending),
       signedAt = generated.signedAt,
       pdfUrl = generated.pdfUrl,
-      ipAddress = generated.ipAddress,
-      createdAt = generated.createdAt,
-      updatedAt = generated.updatedAt,
-      updatedByUserId = generated.updatedByUserId
+      ipAddress = generated.ipAddress
     )
   }
 

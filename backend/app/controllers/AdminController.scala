@@ -36,7 +36,7 @@ class AdminController @Inject()(
     result match {
       case Left(errors) => Future.successful(BadRequest(Json.toJson(errors)))
       case Right(form) =>
-        projectService.create(form.name, form.slug, form.description, form.waiverTemplate, form.isActive) map { project =>
+        projectService.create(form.name, form.slug, form.description, form.waiverTemplate, if (form.isActive) "active" else "inactive") map { project =>
           Created(Json.toJson(project))
         } recover {
           case ex => InternalServerError(Json.obj("code" -> "project_creation_failed", "message" -> ex.getMessage))
@@ -62,7 +62,7 @@ class AdminController @Inject()(
     result match {
       case Left(errors) => Future.successful(BadRequest(Json.toJson(errors)))
       case Right(form) =>
-        projectService.update(id, form.name, form.slug, form.description, form.waiverTemplate, form.isActive) map {
+        projectService.update(id, form.name, form.slug, form.description, form.waiverTemplate, if (form.isActive) "active" else "inactive") map {
           case Some(project) => Ok(Json.toJson(project))
           case None => NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with id '$id' not found"))
         } recover {

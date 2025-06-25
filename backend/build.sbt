@@ -2,7 +2,7 @@ name := "waivers-backend"
 
 organization := "io.bryzek"
 
-ThisBuild / scalaVersion := "3.6.4"
+ThisBuild / scalaVersion := "3.7.1"
 
 ThisBuild / javacOptions ++= Seq("-source", "17", "-target", "17")
 
@@ -42,11 +42,11 @@ lazy val generated = project
     ),
     libraryDependencies ++= Seq(
       ws,
-      "com.github.mbryzek" % "lib-query" % "0.0.14",
-      "com.github.mbryzek" % "lib-util" % "0.0.10",
-      "joda-time" % "joda-time" % "2.13.1",
+      "com.github.mbryzek" % "lib-query" % "0.1.1",
+      "com.github.mbryzek" % "lib-util" % "0.0.11",
+      "joda-time" % "joda-time" % "2.14.0",
       "org.playframework.anorm" %% "anorm-postgres" % "2.7.0",
-      "org.postgresql" % "postgresql" % "42.7.5",
+      "org.postgresql" % "postgresql" % "42.7.7",
       "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % Test,
     ),
   )
@@ -74,7 +74,7 @@ lazy val root = (project in file("."))
       "com.typesafe.play" %% "play-guice" % "2.9.6",
       "com.google.inject" % "guice" % "5.1.0",
       "com.google.inject.extensions" % "guice-assistedinject" % "5.1.0",
-      "org.postgresql" % "postgresql" % "42.7.5",
+      "org.postgresql" % "postgresql" % "42.7.7",
       "org.playframework.anorm" %% "anorm-postgres" % "2.7.0",
       "org.typelevel" %% "cats-core" % "2.12.0",
       "org.typelevel" %% "cats-effect" % "3.5.7",
