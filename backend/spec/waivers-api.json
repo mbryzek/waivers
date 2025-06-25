@@ -9,6 +9,32 @@
   ],
 
   "enums": {
+    "project_status": {
+      "description": "Status of a waiver project",
+      "values": [
+        {
+          "name": "active",
+          "description": "Project is accepting new waivers"
+        },
+        {
+          "name": "inactive",
+          "description": "Project is not accepting new waivers"
+        }
+      ]
+    },
+    "waiver_status": {
+      "description": "Status of a waiver version",
+      "values": [
+        {
+          "name": "current",
+          "description": "This is the current version of the waiver"
+        },
+        {
+          "name": "archived",
+          "description": "This is an archived version of the waiver"
+        }
+      ]
+    },
     "signature_status": {
       "description": "Status of a waiver signature",
       "values": [
@@ -40,7 +66,7 @@
         { "name": "name", "type": "string", "description": "Display name of the project" },
         { "name": "slug", "type": "string", "description": "URL-friendly unique identifier" },
         { "name": "description", "type": "string", "required": false, "description": "Optional project description" },
-        { "name": "is_active", "type": "boolean", "description": "Whether this project is accepting new waivers" }
+        { "name": "status", "type": "project_status", "description": "Current status of the project" }
       ]
     },
 
@@ -63,7 +89,7 @@
         { "name": "version", "type": "integer", "description": "Version number" },
         { "name": "title", "type": "string", "description": "Title of the waiver" },
         { "name": "content", "type": "string", "description": "Full waiver text content" },
-        { "name": "is_current", "type": "boolean", "description": "Whether this is the current version" }
+        { "name": "status", "type": "waiver_status", "description": "Status of this waiver version" }
       ]
     },
 

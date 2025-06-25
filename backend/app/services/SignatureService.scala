@@ -90,94 +90,78 @@ class SignatureService @Inject()(
     usersDao.findAll(limit = Some(1))(query => query.equals("users.email", Some(form.email))).headOption match {
       case Some(generatedUser) =>
         // Update user with latest information
-        val userForm = db.generated.UserForm(
-          id = generatedUser.id,
+        val updatedForm = generatedUser.form.copy(
           email = form.email,
           lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
-          phone = form.phone
+          phone = form.phone,
+          updatedAt = DateTime.now(),
+          updatedByUserId = "system" // TODO: Get proper user context
         )
-        usersDao.updateById("system", generatedUser.id, userForm) // TODO: Get proper user context
+        usersDao.updateById("system", generatedUser.id, updatedForm)
         User(usersDao.findById(generatedUser.id).getOrElse(generatedUser))
 
       case None =>
-        val userId = s"usr-${UUID.randomUUID().toString.replace("-", "")}"
         val userForm = db.generated.UserForm(
-          id = userId,
           email = form.email,
           lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
-          phone = form.phone
+          phone = form.phone,
+          createdAt = DateTime.now(),
+          updatedAt = DateTime.now(),
+          updatedByUserId = "system", // TODO: Get proper user context
+          hashCode = System.currentTimeMillis()
         )
-        usersDao.insert("system", userForm) // TODO: Get proper user context
-        User(usersDao.findById(userId).getOrElse(
-          throw new RuntimeException(s"Failed to create user with id $userId")
-        ))
+        val insertedUser = usersDao.insert("system", userForm)
+        User(insertedUser)
     }
   }
 
   private def createSignatureRecord(user: User, waiver: Waiver, ipAddress: String): Future[Signature] = Future {
-    val signatureId = s"sig-${UUID.randomUUID().toString.replace("-", "")}"
     val signatureForm = GeneratedSignatureForm(
-      id = signatureId,
       userId = user.id,
       waiverId = waiver.id,
       signatureTemplateId = None, // Will be set when signature template is selected
       signatureRequestId = None, // Will be set when signature request is created
-      status = SignatureStatus.Pending.name,
+      status = "pending",
       signedAt = None,
       pdfUrl = None,
-      ipAddress = Some(ipAddress)
+      ipAddress = Some(ipAddress),
+      createdAt = DateTime.now(),
+      updatedAt = DateTime.now(),
+      updatedByUserId = "system", // TODO: Get proper user context
+      hashCode = System.currentTimeMillis()
     )
 
-    signaturesDao.insert("system", signatureForm) // TODO: Get proper user context
-    Signature(signaturesDao.findById(signatureId).getOrElse(
-      throw new RuntimeException(s"Failed to create signature with id $signatureId")
-    ))
+    val insertedSignature = signaturesDao.insert("system", signatureForm)
+    Signature(insertedSignature)
   }
 
   private def updateSignatureWithRequestId(signatureId: String, requestId: String): Future[Unit] = Future {
-    signaturesDao.findById(signatureId) match {
-      case Some(existingSignature) =>
-        val updatedForm = GeneratedSignatureForm(
-          id = existingSignature.id,
-          userId = existingSignature.userId,
-          waiverId = existingSignature.waiverId,
-          signatureTemplateId = existingSignature.signatureTemplateId,
-          signatureRequestId = Some(requestId),
-          status = existingSignature.status,
-          signedAt = existingSignature.signedAt,
-          pdfUrl = existingSignature.pdfUrl,
-          ipAddress = existingSignature.ipAddress
-        )
-        signaturesDao.updateById("system", signatureId, updatedForm)
-      case None =>
-        throw new RuntimeException(s"Signature with id $signatureId not found for update")
+    signaturesDao.findById(signatureId).foreach { existingSignature =>
+      val updatedForm = existingSignature.form.copy(
+        signatureRequestId = Some(requestId),
+        updatedAt = DateTime.now(),
+        updatedByUserId = "system" // TODO: Get proper user context
+      )
+      signaturesDao.updateById("system", signatureId, updatedForm)
     }
   }
 
   def markSignatureAsSigned(signatureId: String, signatureData: String): Future[Option[Signature]] = Future {
-    signaturesDao.findById(signatureId) match {
-      case Some(existingSignature) =>
-        val updatedForm = GeneratedSignatureForm(
-          id = existingSignature.id,
-          userId = existingSignature.userId,
-          waiverId = existingSignature.waiverId,
-          signatureTemplateId = existingSignature.signatureTemplateId,
-          signatureRequestId = existingSignature.signatureRequestId,
-          status = SignatureStatus.Signed.name,
-          signedAt = Some(DateTime.now),
-          pdfUrl = existingSignature.pdfUrl, // Keep existing PDF URL
-          ipAddress = existingSignature.ipAddress
-        )
-        signaturesDao.updateById("system", signatureId, updatedForm)
-        Some(Signature(signaturesDao.findById(signatureId).getOrElse(
-          throw new RuntimeException(s"Failed to find updated signature with id $signatureId")
-        )))
-      case None =>
-        None
+    signaturesDao.findById(signatureId).map { existingSignature =>
+      val updatedForm = existingSignature.form.copy(
+        status = "signed", // Using string instead of SignatureStatus.Signed.name
+        signedAt = Some(DateTime.now()),
+        updatedAt = DateTime.now(),
+        updatedByUserId = "system" // TODO: Get proper user context
+      )
+      signaturesDao.updateById("system", signatureId, updatedForm)
+      Signature(signaturesDao.findById(signatureId).getOrElse(
+        throw new RuntimeException(s"Failed to find updated signature with id $signatureId")
+      ))
     }
   }
 }
