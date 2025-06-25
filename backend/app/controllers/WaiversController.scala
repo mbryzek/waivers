@@ -26,7 +26,7 @@ class WaiversController @Inject()(
       name = internal.name,
       slug = internal.slug,
       description = internal.description,
-      isActive = internal.isActive
+      isActive = internal.status == "active"
     )
   }
 
@@ -37,7 +37,7 @@ class WaiversController @Inject()(
       version = internal.version,
       title = internal.title,
       content = internal.content,
-      isCurrent = internal.isCurrent
+      isCurrent = internal.status == "current"
     )
   }
 
