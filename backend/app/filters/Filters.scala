@@ -1,6 +1,6 @@
 package filters
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import play.api.http.HttpFilters
 import play.api.mvc.*
 import play.filters.cors.CORSFilter
