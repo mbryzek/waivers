@@ -95,11 +95,9 @@ class SignatureService @Inject()(
           lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
-          phone = form.phone,
-          updatedAt = DateTime.now(),
-          updatedByUserId = "system" // TODO: Get proper user context
+          phone = form.phone
         )
-        usersDao.updateById("system", generatedUser.id, updatedForm)
+        usersDao.updateById(generatedUser.id, updatedForm)
         User(usersDao.findById(generatedUser.id).getOrElse(generatedUser))
 
       case None =>
@@ -108,13 +106,9 @@ class SignatureService @Inject()(
           lowerEmail = form.email.toLowerCase,
           firstName = form.firstName,
           lastName = form.lastName,
-          phone = form.phone,
-          createdAt = DateTime.now(),
-          updatedAt = DateTime.now(),
-          updatedByUserId = "system", // TODO: Get proper user context
-          hashCode = System.currentTimeMillis()
+          phone = form.phone
         )
-        val insertedUser = usersDao.insert("system", userForm)
+        val insertedUser = usersDao.insert(userForm)
         User(insertedUser)
     }
   }
@@ -128,25 +122,19 @@ class SignatureService @Inject()(
       status = "pending",
       signedAt = None,
       pdfUrl = None,
-      ipAddress = Some(ipAddress),
-      createdAt = DateTime.now(),
-      updatedAt = DateTime.now(),
-      updatedByUserId = "system", // TODO: Get proper user context
-      hashCode = System.currentTimeMillis()
+      ipAddress = Some(ipAddress)
     )
 
-    val insertedSignature = signaturesDao.insert("system", signatureForm)
+    val insertedSignature = signaturesDao.insert(signatureForm)
     Signature(insertedSignature)
   }
 
   private def updateSignatureWithRequestId(signatureId: String, requestId: String): Future[Unit] = Future {
     signaturesDao.findById(signatureId).foreach { existingSignature =>
       val updatedForm = existingSignature.form.copy(
-        signatureRequestId = Some(requestId),
-        updatedAt = DateTime.now(),
-        updatedByUserId = "system" // TODO: Get proper user context
+        signatureRequestId = Some(requestId)
       )
-      signaturesDao.updateById("system", signatureId, updatedForm)
+      signaturesDao.updateById(signatureId, updatedForm)
     }
   }
 
@@ -154,11 +142,9 @@ class SignatureService @Inject()(
     signaturesDao.findById(signatureId).map { existingSignature =>
       val updatedForm = existingSignature.form.copy(
         status = "signed", // Using string instead of SignatureStatus.Signed.name
-        signedAt = Some(DateTime.now()),
-        updatedAt = DateTime.now(),
-        updatedByUserId = "system" // TODO: Get proper user context
+        signedAt = Some(DateTime.now())
       )
-      signaturesDao.updateById("system", signatureId, updatedForm)
+      signaturesDao.updateById(signatureId, updatedForm)
       Signature(signaturesDao.findById(signatureId).getOrElse(
         throw new RuntimeException(s"Failed to find updated signature with id $signatureId")
       ))

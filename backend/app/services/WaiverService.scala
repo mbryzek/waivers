@@ -14,10 +14,10 @@ class WaiverService @Inject()(
   private def toInternal(generated: GeneratedWaiver): Waiver = Waiver(generated)
 
   def findCurrentByProjectId(projectId: String): Future[Option[Waiver]] = Future {
-    waiversDao.findAll(limit = Some(1))(customQueryModifier = query =>
+    waiversDao.findAll(limit = Some(1))(using query =>
       query
         .equals("waivers.project_id", Some(projectId))
-        .equals("waivers.is_current", Some(true))
+        .equals("waivers.status", Some("current"))
     ).headOption.map(toInternal)
   }
 
