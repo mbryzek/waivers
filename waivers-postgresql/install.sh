@@ -6,3 +6,5 @@ psql -U postgres -c 'GRANT ALL ON DATABASE waiverdb TO api' postgres
 psql -U postgres -c 'ALTER DATABASE waiverdb OWNER TO api' postgres
 
 sem-apply --url postgresql://api@localhost/waiverdb
+
+psql -U api -f data.sql waiverdb 
