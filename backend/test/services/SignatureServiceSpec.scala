@@ -2,6 +2,8 @@ package services
 
 import helpers.{DefaultAppSpec, DatabaseHelpers}
 import models.internal._
+import cats.data.ValidatedNec
+import cats.implicits._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
@@ -20,7 +22,10 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
         phone = Some("555-1234")
       )
       
-      val (signature, user, createdWaiver) = await(service.createSignature(project, form, "127.0.0.1"))
+      val result = await(service.createSignature(project, form, "127.0.0.1"))
+      
+      result.isValid.mustBe(true)
+      val (signature, user, createdWaiver) = result.getOrElse(fail("Expected valid result"))
       
       signature.status.mustBe(SignatureStatus.Pending)
       signature.ipAddress.mustBe(Some("127.0.0.1"))
@@ -48,7 +53,10 @@ class SignatureServiceSpec extends DefaultAppSpec with DatabaseHelpers {
         phone = Some("555-5678")
       )
       
-      val (signature, user, createdWaiver) = await(service.createSignature(project, form, "192.168.1.1"))
+      val result = await(service.createSignature(project, form, "192.168.1.1"))
+      
+      result.isValid.mustBe(true)
+      val (signature, user, createdWaiver) = result.getOrElse(fail("Expected valid result"))
       
       signature.status.mustBe(SignatureStatus.Pending)
       signature.ipAddress.mustBe(Some("192.168.1.1"))

@@ -3,6 +3,8 @@ package services
 import db.generated.{SignaturesDao, UsersDao, SignatureTemplatesDao, SignatureRequestsDao}
 import db.generated.{Signature => GeneratedSignature, User => GeneratedUser, SignatureForm => GeneratedSignatureForm}
 import models.internal._
+import cats.data.ValidatedNec
+import cats.implicits._
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
@@ -19,26 +21,35 @@ class SignatureService @Inject()(
   pdfCoService: PdfCoService
 )(implicit ec: ExecutionContext) {
 
-  def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[(Signature, User, Waiver)] = {
+  def createSignature(project: Project, form: WaiverForm, ipAddress: String): Future[ValidatedNec[String, (Signature, User, Waiver)]] = {
     for {
       // Find or create user
       user <- findOrCreateUser(form)
 
       // Get current waiver for project
-      waiver <- waiverService.findCurrentByProjectId(project.id).map(_.getOrElse(
+      waiverOpt <- waiverService.findCurrentByProjectId(project.id)
+      waiver = waiverOpt.getOrElse(
         throw new RuntimeException(s"No current waiver found for project ${project.id}")
-      ))
+      )
 
       // Create signature record
       signature <- createSignatureRecord(user, waiver, ipAddress)
 
       // Create PDF.co signature request
-      signatureRequestId <- pdfCoService.createSignatureRequest(signature, user, waiver)
+      signatureRequestResult <- pdfCoService.createSignatureRequest(signature, user, waiver)
 
-      // Update signature with PDF.co request ID
-      _ <- updateSignatureWithRequestId(signature.id, signatureRequestId)
+      // Handle the ValidatedNec result
+      result <- signatureRequestResult match {
+        case cats.data.Validated.Valid(signatureRequestId) =>
+          // Update signature with PDF.co request ID
+          updateSignatureWithRequestId(signature.id, signatureRequestId).map { _ =>
+            (signature, user, waiver).validNec[String]
+          }
+        case cats.data.Validated.Invalid(errors) =>
+          Future.successful(errors.invalid)
+      }
 
-    } yield (signature, user, waiver)
+    } yield result
   }
 
   def findById(id: String): Future[Option[Signature]] = Future {

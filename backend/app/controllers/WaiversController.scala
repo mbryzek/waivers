@@ -106,13 +106,15 @@ class WaiversController @Inject()(
           result <- projectOpt match {
             case None => Future.successful(NotFound(Json.obj("code" -> "project_not_found", "message" -> s"Project with slug '$slug' not found")))
             case Some(project) =>
-              (for {
-                (signature, user, waiver) <- signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress)
-              } yield {
-                // For PDF.co, the signing URL is the signatureRequestId
-                val signingUrlOpt = signature.signatureRequestId
-                Created(Json.toJson(toApiSignature(signature, user, waiver, signingUrlOpt)))
-              }) recover {
+              signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress).map {
+                case cats.data.Validated.Valid((signature, user, waiver)) =>
+                  // For PDF.co, the signing URL is the signatureRequestId
+                  val signingUrlOpt = signature.signatureRequestId
+                  Created(Json.toJson(toApiSignature(signature, user, waiver, signingUrlOpt)))
+                case cats.data.Validated.Invalid(errors) =>
+                  val errorMessage = errors.toList.mkString(", ")
+                  InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> errorMessage))
+              } recover {
                 case ex => InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> ex.getMessage))
               }
           }
