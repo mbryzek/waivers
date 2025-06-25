@@ -15,25 +15,62 @@
     "project_form": {
       "description": "Form for creating/updating projects",
       "fields": [
-        { "name": "name", "type": "string", "description": "Display name of the project" },
-        { "name": "slug", "type": "string", "description": "URL-friendly unique identifier" },
-        { "name": "description", "type": "string", "required": false, "description": "Optional project description" },
-        { "name": "waiver_template", "type": "string", "description": "Template content for the waiver document" },
-        { "name": "status", "type": "io.bryzek.waivers.api.v0.enums.project_status", "default": "active", "description": "Current status of the project" }
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Display name of the project"
+        },
+        {
+          "name": "slug",
+          "type": "string",
+          "description": "URL-friendly unique identifier"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Optional project description"
+        },
+        {
+          "name": "waiver_template",
+          "type": "string",
+          "description": "Template content for the waiver document"
+        },
+        {
+          "name": "status",
+          "type": "io.bryzek.waivers.api.v0.enums.project_status",
+          "default": "active",
+          "description": "Current status of the project"
+        }
       ]
     }
   },
 
   "resources": {
-    "project_form": {
+    "io.bryzek.waivers.api.v0.models.project": {
       "operations": [
         {
           "method": "GET",
           "path": "/projects",
           "description": "List all projects",
           "parameters": [
-            { "name": "limit", "type": "long", "location": "query", "required": true, "default": 50, "minimum": 1, "maximum": 100 },
-            { "name": "offset", "type": "long", "location": "query", "required": true, "default": 0, "minimum": 0 }
+            {
+              "name": "limit",
+              "type": "long",
+              "location": "query",
+              "required": true,
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "location": "query",
+              "required": true,
+              "default": 0,
+              "minimum": 0
+            }
           ],
           "responses": {
             "200": { "type": "[io.bryzek.waivers.api.v0.models.project]" }

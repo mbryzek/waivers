@@ -1,1 +1,1 @@
-GET     /_internal_/healthcheck     controllers.Healthchecks.get()
+GET     /_internal_/healthcheck     controllers.HealthcheckController.index()

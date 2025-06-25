@@ -4,8 +4,6 @@ import io.bryzek.waivers.api.v0.models
 import io.bryzek.waivers.api.v0.models.json.*
 import play.api.libs.json._
 import org.joda.time.DateTime
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
 import javax.inject.Inject
 
 // Internal models that correspond to API Builder generated models
@@ -15,9 +13,7 @@ case class Project(
   id: String,
   name: String,
   slug: String,
-  description: Option[String],
-  waiverTemplate: String,
-  status: String
+  status: ProjectStatus
 )
 
 object Project {
@@ -26,44 +22,23 @@ object Project {
       id = generated.id,
       name = generated.name,
       slug = generated.slug,
-      description = generated.description,
-      waiverTemplate = generated.waiverTemplate,
-      status = generated.status
+      status = ProjectStatus(generated.status)
     )
   }
-
-  implicit val format: Format[Project] = Json.format[Project]
 }
 
-case class User(
-  id: String,
+case class Person(
   email: String,
   firstName: String,
   lastName: String,
   phone: Option[String]
 )
 
-object User {
-  def apply(generated: db.generated.User): User = {
-    User(
-      id = generated.id,
-      email = generated.email,
-      firstName = generated.firstName,
-      lastName = generated.lastName,
-      phone = generated.phone
-    )
-  }
-
-  implicit val format: Format[User] = Json.format[User]
-}
-
 case class Waiver(
   id: String,
   projectId: String,
   version: Int,
-  title: String,
-  content: String,
-  status: String
+  content: String
 )
 
 object Waiver {
@@ -72,13 +47,9 @@ object Waiver {
       id = generated.id,
       projectId = generated.projectId,
       version = generated.version,
-      title = generated.title,
-      content = generated.content,
-      status = generated.status
+      content = generated.content
     )
   }
-
-  implicit val format: Format[Waiver] = Json.format[Waiver]
 }
 
 case class SignatureTemplate(
@@ -105,56 +76,29 @@ object SignatureTemplate {
   implicit val format: Format[SignatureTemplate] = Json.format[SignatureTemplate]
 }
 
-case class SignatureRequest(
-  id: String,
-  signatureTemplateId: String,
-  provider: SignatureProvider,
-  providerRequestId: String,
-  signingUrl: Option[String],
-  status: SignatureRequestStatus,
-  metadata: Option[String]
-)
-
-object SignatureRequest {
-  def apply(generated: db.generated.SignatureRequest): SignatureRequest = {
-    SignatureRequest(
-      id = generated.id,
-      signatureTemplateId = generated.signatureTemplateId,
-      provider = SignatureProvider.fromString(generated.provider).getOrElse(SignatureProvider.DocuSign),
-      providerRequestId = generated.providerRequestId,
-      signingUrl = generated.signingUrl,
-      status = SignatureRequestStatus.fromString(generated.status).getOrElse(SignatureRequestStatus.Created),
-      metadata = generated.metadata
-    )
-  }
-
-  implicit val format: Format[SignatureRequest] = Json.format[SignatureRequest]
-}
-
 case class Signature(
   id: String,
-  userId: String,
   waiverId: String,
-  signatureTemplateId: Option[String],
-  signatureRequestId: Option[String],
+  person: Person,
   status: SignatureStatus,
   signedAt: Option[DateTime],
   pdfUrl: Option[String],
-  ipAddress: Option[String]
 )
 
 object Signature {
   def apply(generated: db.generated.Signature): Signature = {
     Signature(
       id = generated.id,
-      userId = generated.userId,
       waiverId = generated.waiverId,
-      signatureTemplateId = generated.signatureTemplateId,
-      signatureRequestId = generated.signatureRequestId,
-      status = SignatureStatus.fromString(generated.status).getOrElse(SignatureStatus.Pending),
+      person = Person(
+        firstName = generated.personFirstName,
+        lastName = generated.personLastName,
+        email = generated.personEmail,
+        phone = generated.personPhone,
+      ),
+      status = SignatureStatus(generated.status),
       signedAt = generated.signedAt,
-      pdfUrl = generated.pdfUrl,
-      ipAddress = generated.ipAddress
+      pdfUrl = generated.pdfUrl
     )
   }
 

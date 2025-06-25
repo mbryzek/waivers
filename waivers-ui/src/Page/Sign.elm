@@ -36,6 +36,7 @@ init signatureId pdfUrl =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    Debug.log "g"
     case msg of
         SignatureDataChanged data ->
             ( { model | signatureData = data }, Cmd.none )

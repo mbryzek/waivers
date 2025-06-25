@@ -2,4 +2,4 @@
 # Service version: 0.0.1
 # User agent: apibuilder localhost 9000/bryzek/waivers-admin/latest/play_2_x_routes
 
-GET     /project_forms/projects     controllers.ProjectForms.getProjects(limit: Long ?= 50L, offset: Long ?= 0L)
+GET     /projects/projects     controllers.Projects.getProjects(limit: Long ?= 50L, offset: Long ?= 0L)
