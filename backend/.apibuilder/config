@@ -12,7 +12,7 @@ code:
         - generator: play_2_8_mock_client
           target: generated/test/apibuilder
         - generator: play_2_x_routes
-          target: conf/waivers-api.routes
+          target: conf/waiversapi.routes
     waivers-admin:
       version: latest
       generators:
@@ -25,7 +25,7 @@ code:
         - generator: play_2_8_mock_client
           target: generated/test/apibuilder
         - generator: play_2_x_routes
-          target: conf/waivers-admin.routes
+          target: conf/waiversadmin.routes
     waivers-error:
       version: latest
       generators:
