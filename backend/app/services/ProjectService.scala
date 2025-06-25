@@ -28,55 +28,58 @@ class ProjectService @Inject()(
     projectsDao.findAll(limit = Some(limit), offset = offset).map(toInternal)
   }
 
-  def create(name: String, slug: String, description: Option[String], waiverTemplate: String, isActive: Boolean = true): Future[Project] = Future {
-    val projectId = s"prj-${UUID.randomUUID().toString.replace("-", "")}"
+  def create(name: String, slug: String, description: Option[String], waiverTemplate: String, status: String = "active"): Future[Project] = Future {
     val projectForm = GeneratedProjectForm(
-      id = projectId,
       name = name,
       slug = slug,
       description = description,
       waiverTemplate = waiverTemplate,
-      isActive = isActive
+      status = status,
+      createdAt = DateTime.now(),
+      updatedAt = DateTime.now(),
+      updatedByUserId = "system", // TODO: Get proper user context
+      hashCode = System.currentTimeMillis()
     )
     
     // Insert the project
-    projectsDao.insert("system", projectForm) // TODO: Get proper user context
+    val insertedProject = projectsDao.insert("system", projectForm)
     
     // Create a default waiver for the project
-    val waiverId = s"wvr-${UUID.randomUUID().toString.replace("-", "")}"
     val waiverForm = GeneratedWaiverForm(
-      id = waiverId,
-      projectId = projectId,
+      projectId = insertedProject.id,
       version = 1,
       title = s"$name Waiver",
       content = waiverTemplate,
-      isCurrent = true
+      status = "current",
+      createdAt = DateTime.now(),
+      updatedAt = DateTime.now(),
+      updatedByUserId = "system", // TODO: Get proper user context
+      hashCode = System.currentTimeMillis()
     )
     
-    waiversDao.insert("system", waiverForm) // TODO: Get proper user context
+    waiversDao.insert("system", waiverForm)
     
     // Return the created project
-    projectsDao.findById(projectId).map(toInternal).getOrElse(
-      throw new RuntimeException(s"Failed to create project with id $projectId")
-    )
+    toInternal(insertedProject)
   }
 
-  def update(id: String, name: String, slug: String, description: Option[String], waiverTemplate: String, isActive: Boolean): Future[Option[Project]] = {
-    findById(id).map { maybeProject =>
-      maybeProject.map { existingProject =>
-        val form = GeneratedProjectForm(
-          id = id,
+  def update(id: String, name: String, slug: String, description: Option[String], waiverTemplate: String, status: String): Future[Option[Project]] = {
+    Future {
+      projectsDao.findById(id).map { existingProject =>
+        val updatedForm = existingProject.form.copy(
           name = name,
           slug = slug,
           description = description,
           waiverTemplate = waiverTemplate,
-          isActive = isActive
+          status = status,
+          updatedAt = DateTime.now(),
+          updatedByUserId = "system" // TODO: Get proper user context
         )
         
-        projectsDao.updateById("system", id, form) // TODO: Get proper user context
+        projectsDao.updateById("system", id, updatedForm)
         
         // Return the updated project
-        projectsDao.findById(id).map(toInternal).getOrElse(existingProject)
+        projectsDao.findById(id).map(toInternal).getOrElse(toInternal(existingProject))
       }
     }
   }

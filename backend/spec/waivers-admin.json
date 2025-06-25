@@ -19,7 +19,7 @@
         { "name": "slug", "type": "string", "description": "URL-friendly unique identifier" },
         { "name": "description", "type": "string", "required": false, "description": "Optional project description" },
         { "name": "waiver_template", "type": "string", "description": "Template content for the waiver document" },
-        { "name": "is_active", "type": "boolean", "default": "true", "description": "Whether this project is accepting new waivers" }
+        { "name": "status", "type": "io.bryzek.waivers.api.v0.enums.project_status", "default": "active", "description": "Current status of the project" }
       ]
     }
   },

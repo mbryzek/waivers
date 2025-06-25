@@ -1,0 +1,202 @@
+{
+  "name": "waivers-public",
+  "namespace": "io.bryzek.waivers.dao.v0",
+  "models": {
+    "project": {
+      "description": "A waiver project",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "name", "type": "string", "description": "Name of the project" },
+        { "name": "slug", "type": "string", "description": "URL-friendly slug for the project" },
+        { "name": "description", "type": "string", "required": false, "description": "Optional description of the project" },
+        { "name": "waiver_template", "type": "string", "description": "Template content for waivers in this project" },
+        { "name": "status", "type": "string", "description": "Current status of the project: active, inactive" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "prj"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    },
+    "user": {
+      "description": "A user who can sign waivers",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "email", "type": "string", "description": "Email address of the user" },
+        { "name": "lower_email", "type": "string", "description": "Lowercase email for efficient searching" },
+        { "name": "first_name", "type": "string", "description": "First name of the user" },
+        { "name": "last_name", "type": "string", "description": "Last name of the user" },
+        { "name": "phone", "type": "string", "required": false, "description": "Optional phone number" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "usr"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    },
+    "waiver": {
+      "description": "A waiver version for a project",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "project_id", "type": "string", "description": "ID of the project this waiver belongs to" },
+        { "name": "version", "type": "integer", "description": "Version number of this waiver" },
+        { "name": "title", "type": "string", "description": "Title of the waiver" },
+        { "name": "content", "type": "string", "description": "Content of the waiver" },
+        { "name": "status", "type": "string", "description": "Status of this waiver version: current, archived" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "wvr"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    },
+    "signature_template": {
+      "description": "A template for signature requests",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "project_id", "type": "string", "description": "ID of the project this template belongs to" },
+        { "name": "provider", "type": "string", "description": "Signature provider (e.g., hellosign, pdfco)" },
+        { "name": "provider_template_id", "type": "string", "description": "ID of the template in the provider system" },
+        { "name": "name", "type": "string", "description": "Name of the template" },
+        { "name": "status", "type": "string", "description": "Status of the template: active, inactive" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "stp"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    },
+    "signature_request": {
+      "description": "A request for a signature from a provider",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "signature_template_id", "type": "string", "description": "ID of the signature template used" },
+        { "name": "provider", "type": "string", "description": "Signature provider (e.g., hellosign, pdfco)" },
+        { "name": "provider_request_id", "type": "string", "description": "ID of the request in the provider system" },
+        { "name": "signing_url", "type": "string", "required": false, "description": "URL for signing the document" },
+        { "name": "status", "type": "string", "description": "Status of the signature request: pending, sent, signed, cancelled, failed" },
+        { "name": "metadata", "type": "string", "required": false, "description": "Additional metadata as JSON" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "srt"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    },
+    "signature": {
+      "description": "A signature record",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "user_id", "type": "string", "description": "ID of the user who signed" },
+        { "name": "waiver_id", "type": "string", "description": "ID of the waiver that was signed" },
+        { "name": "signature_template_id", "type": "string", "required": false, "description": "ID of the signature template used" },
+        { "name": "signature_request_id", "type": "string", "required": false, "description": "ID of the signature request" },
+        { "name": "status", "type": "string", "description": "Status of the signature: pending, signed, cancelled, failed" },
+        { "name": "signed_at", "type": "date-time-iso8601", "required": false, "description": "When the signature was completed" },
+        { "name": "pdf_url", "type": "string", "required": false, "description": "URL to the signed PDF" },
+        { "name": "ip_address", "type": "string", "required": false, "description": "IP address of the signer" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" },
+        { "name": "updated_by_user_id", "type": "string" },
+        { "name": "hash_code", "type": "long" }
+      ],
+      "attributes": [
+        {
+          "name": "scala",
+          "value": {
+            "pkey_generator": {
+              "class": "com.mbryzek.util.IdGenerator",
+              "prefix": "sig"
+            }
+          }
+        },
+        {
+          "name": "psql",
+          "value": {
+            "pkey": "id"
+          }
+        }
+      ]
+    }
+  }
+}
