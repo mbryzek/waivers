@@ -1,11 +1,11 @@
 package services
 
-import play.api.Configuration
-import play.api.libs.json._
+import play.api.libs.json.{Json, JsValue}
 import sttp.client3._
 import sttp.client3.playJson._
 import sttp.client3.asynchttpclient.future._
 import models.internal._
+import util.BackendConfig
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.annotation.unused
@@ -13,17 +13,16 @@ import java.util.Base64
 
 @Singleton
 class PdfCoService @Inject()(
-  config: Configuration
+  backendConfig: BackendConfig
 )(implicit ec: ExecutionContext) {
 
   private val backend = AsyncHttpClientFutureBackend()
   
   private val apiUrl = "https://api.pdf.co/v1"
-  private val apiKey = config.getOptional[String]("pdfco.api.key")
+  private val apiKey = backendConfig.pdfCoConfig.apiKey
 
   def createSignatureRequest(signature: Signature, user: User, waiver: Waiver): Future[String] = {
-    apiKey match {
-      case Some(key) =>
+    try {
         // Create a simple PDF with waiver content that will be signed
         val waiverContent = s"""
           |${waiver.title}
@@ -57,7 +56,7 @@ class PdfCoService @Inject()(
         )
 
         val request = basicRequest
-          .header("x-api-key", key)
+          .header("x-api-key", apiKey)
           .contentType("application/json")
           .body(createPdfRequest)
           .post(uri"$apiUrl/pdf/convert/from/html")
@@ -73,7 +72,7 @@ class PdfCoService @Inject()(
                 
                 // For PDF.co, we'll return a custom signing URL that includes the PDF URL
                 // This will be handled by our frontend to show the PDF and collect signature
-                val signingUrl = s"${config.getOptional[String]("app.base.url").getOrElse("http://localhost:8080")}/sign/${signature.id}?pdf=${java.net.URLEncoder.encode(pdfUrl, "UTF-8")}"
+                val signingUrl = s"${backendConfig.appBaseUrl}/sign/${signature.id}?pdf=${java.net.URLEncoder.encode(pdfUrl, "UTF-8")}"
                 signingUrl
               } else {
                 val errorMessage = (json \ "message").asOpt[String].getOrElse("Unknown error")
@@ -85,17 +84,15 @@ class PdfCoService @Inject()(
               throw new RuntimeException(s"PDF.co API error: $error")
           }
         }
-      case None =>
-        // Fallback for demo when no API key is configured
-        val mockSigningUrl = s"${config.getOptional[String]("app.base.url").getOrElse("http://localhost:8080")}/sign/${signature.id}?demo=true"
-        println(s"[PDF.co Demo] No API key configured, using mock URL: $mockSigningUrl")
-        Future.successful(mockSigningUrl)
+    } catch {
+      case ex: Exception =>
+        println(s"[PDF.co Error] Exception during PDF creation: ${ex.getMessage}")
+        throw ex
     }
   }
 
   def addSignatureToPdf(pdfUrl: String, signatureData: String, x: Int = 450, y: Int = 200): Future[String] = {
-    apiKey match {
-      case Some(key) =>
+    try {
         // Add signature to the PDF using PDF.co's edit API
         val requestBody = Json.obj(
           "url" -> pdfUrl,
@@ -111,7 +108,7 @@ class PdfCoService @Inject()(
         )
 
         val request = basicRequest
-          .header("x-api-key", key)
+          .header("x-api-key", apiKey)
           .contentType("application/json")
           .body(requestBody)
           .post(uri"$apiUrl/pdf/edit/add")
@@ -135,9 +132,10 @@ class PdfCoService @Inject()(
               throw new RuntimeException(s"PDF.co API error: $error")
           }
         }
-      case None =>
-        println(s"[PDF.co Demo] No API key configured, returning original PDF URL: $pdfUrl")
-        Future.successful(pdfUrl)
+    } catch {
+      case ex: Exception =>
+        println(s"[PDF.co Error] Exception during signature addition: ${ex.getMessage}")
+        throw ex
     }
   }
 
