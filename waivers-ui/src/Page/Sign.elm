@@ -59,9 +59,11 @@ update msg model =
 submitSignature : String -> String -> Cmd Msg
 submitSignature signatureId signatureData =
     let
+        signatureCompletion : Api.SignatureCompletion
         signatureCompletion =
             Api.SignatureCompletion signatureData
 
+        httpParams : Api.HttpRequestParams
         httpParams =
             Api.HttpRequestParams Constants.apiHost []
     in

@@ -1,4 +1,4 @@
-module Route exposing (Route(..), fromUrl)
+module Route exposing (Route(..), SignParams, fromUrl)
 
 import Url exposing (Url)
 import Url.Parser exposing (..)
@@ -32,7 +32,7 @@ matchRoute =
     oneOf
         [ map RouteHome top
         , map RouteWaiver (s "waiver" </> string)
-        , map (\signatureId pdfUrl -> RouteSign { signatureId = signatureId, pdfUrl = Maybe.andThen Url.percentDecode pdfUrl }) 
+        , map (\signatureId pdfUrl -> RouteSign { signatureId = signatureId, pdfUrl = Maybe.andThen Url.percentDecode pdfUrl })
             (s "sign" </> string <?> Query.string "pdf")
         , map RouteAdmin (s "admin")
         , map RouteAdminProjects (s "admin" </> s "projects")

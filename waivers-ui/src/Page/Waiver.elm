@@ -85,6 +85,7 @@ update msg model =
                             Just model.phone
                     }
 
+                httpParams : Api.HttpRequestParams
                 httpParams =
                     { apiHost = Constants.apiHost
                     , headers = []
@@ -125,6 +126,7 @@ loadProject slug =
 createSignatureRequest : String -> WaiverForm -> Api.HttpRequestParams -> Cmd Msg
 createSignatureRequest slug waiverForm params =
     let
+        url : String
         url =
             params.apiHost ++ "/projects/" ++ slug ++ "/signatures"
     in
@@ -261,12 +263,15 @@ viewWaiverForm model =
                 )
             , div [ class "flex justify-end pt-4" ]
                 [ let
+                    isValid : Bool
                     isValid =
                         not (String.isEmpty model.firstName || String.isEmpty model.lastName || String.isEmpty model.email)
 
+                    isSubmitting : Bool
                     isSubmitting =
                         ApiRequest.isLoading model.signatureResponse
 
+                    buttonText : String
                     buttonText =
                         if isSubmitting then
                             "Processing..."

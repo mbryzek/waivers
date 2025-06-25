@@ -5,7 +5,7 @@ import Html.Attributes exposing (class, href)
 
 
 view : { title : String, content : List (Html msg), currentYear : Maybe Int } -> Html msg
-view { title, content, currentYear } =
+view { content, currentYear } =
     div [ class "min-h-screen bg-gray-50" ]
         [ viewHeader
         , div [ class "container mx-auto px-4 py-8" ]

@@ -53,6 +53,7 @@ type Msg
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
+        route : Maybe Route
         route =
             Route.fromUrl url
 
@@ -72,6 +73,7 @@ init flags url key =
             case route of
                 Just (Route.RouteSign signParams) ->
                     let
+                        signModel : PageSign.Model
                         signModel = PageSign.init signParams.signatureId signParams.pdfUrl
                     in
                     ( Just signModel, Cmd.none )
@@ -79,6 +81,7 @@ init flags url key =
                 _ ->
                     ( Nothing, Cmd.none )
 
+        appModel : Model
         appModel =
             Model
                 { key = key
@@ -90,6 +93,7 @@ init flags url key =
                 , pageSign = pageSignModel
                 }
         
+        getCurrentYearCmd : Cmd Msg
         getCurrentYearCmd =
             Task.perform 
                 (\posix -> GotCurrentYear (Time.toYear Time.utc posix))
@@ -111,6 +115,7 @@ update msg (Model model) =
 
         UrlChanged url ->
             let
+                route : Maybe Route
                 route =
                     Route.fromUrl url
 
@@ -130,6 +135,7 @@ update msg (Model model) =
                     case route of
                         Just (Route.RouteSign signParams) ->
                             let
+                                signModel : PageSign.Model
                                 signModel = PageSign.init signParams.signatureId signParams.pdfUrl
                             in
                             ( Just signModel, Cmd.none )
@@ -137,6 +143,7 @@ update msg (Model model) =
                         _ ->
                             ( Nothing, Cmd.none )
 
+                updatedModel : { key : Nav.Key, url : Url.Url, route : Maybe Route, version : String, currentYear : Maybe Int, pageWaiver : Maybe PageWaiver.Model, pageSign : Maybe PageSign.Model }
                 updatedModel =
                     { model | url = url, route = route, pageWaiver = pageWaiverModel, pageSign = pageSignModel }
             in
