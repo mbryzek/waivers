@@ -2,6 +2,7 @@
 .metals/
 
 # Scala
+backend/dao/psql
 backend/project/.bloop/
 backend/project/.ivy/
 backend/project/metals.sbt
