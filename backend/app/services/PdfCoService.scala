@@ -93,12 +93,6 @@ class PdfCoService @Inject()(
     }
   }
 
-  def getSigningUrl(signatureRequestId: String, signerEmail: String): Future[Option[String]] = {
-    // For PDF.co integration, the signing URL is generated during createSignatureRequest
-    // This method is kept for compatibility with the existing interface
-    Future.successful(Some(signatureRequestId)) // signatureRequestId is actually the signing URL
-  }
-
   def addSignatureToPdf(pdfUrl: String, signatureData: String, x: Int = 450, y: Int = 200): Future[String] = {
     apiKey match {
       case Some(key) =>
@@ -147,21 +141,4 @@ class PdfCoService @Inject()(
     }
   }
 
-  def getSignedDocumentPdf(signatureRequestId: String): Future[Option[Array[Byte]]] = {
-    // For PDF.co, we would need to download the signed PDF from the URL
-    // This is a placeholder implementation
-    Future.successful(None)
-  }
-
-  def handleWebhook(payload: JsValue): Future[Unit] = {
-    // PDF.co doesn't have the same webhook system as other signature providers
-    // This is kept for interface compatibility
-    Future.successful(())
-  }
-
-  def cancelSignatureRequest(signatureRequestId: String): Future[Unit] = {
-    // PDF.co doesn't have signature request cancellation like other signature providers
-    // This is kept for interface compatibility
-    Future.successful(())
-  }
 }

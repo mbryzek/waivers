@@ -23,21 +23,21 @@ class SignatureService @Inject()(
     for {
       // Find or create user
       user <- findOrCreateUser(form)
-      
+
       // Get current waiver for project
       waiver <- waiverService.findCurrentByProjectId(project.id).map(_.getOrElse(
         throw new RuntimeException(s"No current waiver found for project ${project.id}")
       ))
-      
+
       // Create signature record
       signature <- createSignatureRecord(user, waiver, ipAddress)
-      
+
       // Create PDF.co signature request
       signatureRequestId <- pdfCoService.createSignatureRequest(signature, user, waiver)
-      
+
       // Update signature with PDF.co request ID
       _ <- updateSignatureWithRequestId(signature.id, signatureRequestId)
-      
+
     } yield (signature, user, waiver)
   }
 
@@ -63,10 +63,10 @@ class SignatureService @Inject()(
   }
 
   def findWithFilters(
-    projectId: Option[String], 
-    status: Option[String], 
-    email: Option[String], 
-    limit: Long, 
+    projectId: Option[String],
+    status: Option[String],
+    email: Option[String],
+    limit: Long,
     offset: Long
   ): Future[Seq[Signature]] = {
     // TODO: Implement filtering logic
@@ -89,7 +89,7 @@ class SignatureService @Inject()(
         )
         usersDao.updateById("system", generatedUser.id, userForm) // TODO: Get proper user context
         User(usersDao.findById(generatedUser.id).getOrElse(generatedUser))
-        
+
       case None =>
         val userId = s"usr-${UUID.randomUUID().toString.replace("-", "")}"
         val userForm = db.generated.UserForm(
@@ -120,7 +120,7 @@ class SignatureService @Inject()(
       pdfUrl = None,
       ipAddress = Some(ipAddress)
     )
-    
+
     signaturesDao.insert("system", signatureForm) // TODO: Get proper user context
     Signature(signaturesDao.findById(signatureId).getOrElse(
       throw new RuntimeException(s"Failed to create signature with id $signatureId")
@@ -144,26 +144,6 @@ class SignatureService @Inject()(
         signaturesDao.updateById("system", signatureId, updatedForm)
       case None =>
         throw new RuntimeException(s"Signature with id $signatureId not found for update")
-    }
-  }
-
-  def getSigningUrl(signatureId: String): Future[Option[String]] = {
-    signaturesDao.findById(signatureId) match {
-      case Some(signature) =>
-        signature.signatureRequestId match {
-          case Some(requestId) =>
-            // Find user to get email for signing URL
-            usersDao.findById(signature.userId) match {
-              case Some(user) =>
-                pdfCoService.getSigningUrl(requestId, user.email)
-              case None =>
-                Future.successful(None)
-            }
-          case None =>
-            Future.successful(None)
-        }
-      case None =>
-        Future.successful(None)
     }
   }
 

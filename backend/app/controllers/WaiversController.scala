@@ -108,8 +108,9 @@ class WaiversController @Inject()(
             case Some(project) =>
               (for {
                 (signature, user, waiver) <- signatureService.createSignature(project, toInternalWaiverForm(form), request.remoteAddress)
-                signingUrlOpt <- signatureService.getSigningUrl(signature.id)
               } yield {
+                // For PDF.co, the signing URL is the signatureRequestId
+                val signingUrlOpt = signature.signatureRequestId
                 Created(Json.toJson(toApiSignature(signature, user, waiver, signingUrlOpt)))
               }) recover {
                 case ex => InternalServerError(Json.obj("code" -> "signature_creation_failed", "message" -> ex.getMessage))
